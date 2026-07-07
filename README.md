@@ -1,7 +1,7 @@
-<h1 align="center">Hi, I'm Abdulla Ehsan 👋</h1>
+<h1 align="center">Abdulla Ehsan</h1>
 
 <p align="center">
-  <b>AI Automations Engineer @ BNESIM</b> &nbsp;·&nbsp; Building AI products & agentic automation &nbsp;·&nbsp; Dubai, UAE 🇦🇪
+  <b>Data Analytics & AI Engineer</b> &nbsp;|&nbsp; Data Visualisation &nbsp;|&nbsp; Shipping AI Products &nbsp;|&nbsp; Dubai, UAE
 </p>
 
 <p align="center">
@@ -12,39 +12,37 @@
 
 ---
 
-### 🚀 About Me
+### About Me
 
-- 🧠 I build **AI products and agentic automation** — turning messy, unstructured data into clean, client-ready output.
-- 🏢 **AI Automations Engineer at BNESIM**, where I own major white-label partner accounts (including **Kaspersky**) and built their analytics in **Metabase**.
-- 📱 I ship end to end — two of my AI apps are **live on the App Store**.
-- 🎓 **BSc Computer Science (Data Science)**, Monash University · CS50, Harvard.
-- 📍 Based in **Dubai, UAE**.
+I turn data into clear decisions. My work sits where analytics, visualisation and AI meet. I build data pipelines and dashboards, design visualisations that make complex data readable, and ship AI products from first idea through to a live release.
 
-### 🛠️ Tech Stack
+- Data analytics and AI engineer based in Dubai, working across analytics, visualisation, automation and applied AI.
+- I ship end to end and have taken AI products all the way to live release.
+- BSc Computer Science (Data Science), Monash University. CS50, Harvard.
+
+### Tech Stack
 
 <p>
   <img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white"/>
+  <img src="https://img.shields.io/badge/SQL-4479A1?style=flat-square&logo=mysql&logoColor=white"/>
+  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Metabase-509EE3?style=flat-square&logo=metabase&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Tableau-E97627?style=flat-square&logo=tableau&logoColor=white"/>
   <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white"/>
-  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black"/>
   <img src="https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black"/>
   <img src="https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white"/>
   <img src="https://img.shields.io/badge/C%2B%2B-00599C?style=flat-square&logo=cplusplus&logoColor=white"/>
-  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white"/>
-  <img src="https://img.shields.io/badge/MySQL-4479A1?style=flat-square&logo=mysql&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Metabase-509EE3?style=flat-square&logo=metabase&logoColor=white"/>
   <img src="https://img.shields.io/badge/AWS-FF9900?style=flat-square&logo=amazonwebservices&logoColor=white"/>
-  <img src="https://img.shields.io/badge/LLMs%20%26%20AI%20Agents-8A2BE2?style=flat-square&logo=anthropic&logoColor=white"/>
+  <img src="https://img.shields.io/badge/LLMs%20and%20AI%20Agents-8A2BE2?style=flat-square&logo=anthropic&logoColor=white"/>
   <img src="https://img.shields.io/badge/Git-F05032?style=flat-square&logo=git&logoColor=white"/>
 </p>
 
-### 📌 Featured Projects
+### Featured Projects
 
-- 🧠 **[Explainable AI — Multimodal Sentiment Analysis](https://github.com/AbdullaE100/NEW-MMSA)** — SaaS platform fusing text and image data with explainable AI. Nominated for Best Final-Year Project, Monash University.
-- 🩺 **[Medico](https://github.com/AbdullaE100/medico-app)** — Doctor-first professional networking platform built with React Native and Supabase.
-- 📱 **[TOGA — AI Fitness & Nutrition](https://apps.apple.com/lk/app/toga-gym-fitness-nutrition/id6758775574)** — AI iOS app with computer-vision meal analysis and LLM coaching. Live on the App Store.
-- 🌿 **[Pledge AI](https://apps.apple.com/ae/app/pledge-ai-quit-porn-nofap/id6746690850)** — AI-powered digital-wellbeing app with personalised coaching. Live on the App Store.
-- 🏡 **[Lina Nizar Real Estate](https://github.com/AbdullaE100/Lina-Web)** — Web platform for a Dubai luxury real-estate advisor.
+- **[Explainable AI for Multimodal Sentiment Analysis](https://github.com/AbdullaE100/NEW-MMSA):** A platform that fuses text and image data using explainable AI. Nominated for Best Final-Year Project at Monash University.
+- **[Data Visualisation](https://github.com/AbdullaE100/fit3179):** Interactive visualisations built with Vega-Lite that turn raw datasets into clear, explorable stories.
+- **[Email Management System](https://github.com/AbdullaE100/Email-Management):** A versatile email management application built in C++.
 
 ---
 
-<p align="center"><i>Open to opportunities in AI delivery, implementation and data — let's build something.</i></p>
+<p align="center"><i>Open to opportunities in data analytics, visualisation and AI.</i></p>
