@@ -32,7 +32,7 @@
   <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white"/>
   <img src="https://img.shields.io/badge/MySQL-4479A1?style=flat-square&logo=mysql&logoColor=white"/>
   <img src="https://img.shields.io/badge/Metabase-509EE3?style=flat-square&logo=metabase&logoColor=white"/>
-  <img src="https://img.shields.io/badge/AWS-232F3E?style=flat-square&logo=amazonwebservices&logoColor=white"/>
+  <img src="https://img.shields.io/badge/AWS-FF9900?style=flat-square&logo=amazonwebservices&logoColor=white"/>
   <img src="https://img.shields.io/badge/LLMs%20%26%20AI%20Agents-8A2BE2?style=flat-square&logo=anthropic&logoColor=white"/>
   <img src="https://img.shields.io/badge/Git-F05032?style=flat-square&logo=git&logoColor=white"/>
 </p>
@@ -44,13 +44,6 @@
 - 📱 **[TOGA — AI Fitness & Nutrition](https://apps.apple.com/lk/app/toga-gym-fitness-nutrition/id6758775574)** — AI iOS app with computer-vision meal analysis and LLM coaching. Live on the App Store.
 - 🌿 **[Pledge AI](https://apps.apple.com/ae/app/pledge-ai-quit-porn-nofap/id6746690850)** — AI-powered digital-wellbeing app with personalised coaching. Live on the App Store.
 - 🏡 **[Lina Nizar Real Estate](https://github.com/AbdullaE100/Lina-Web)** — Web platform for a Dubai luxury real-estate advisor.
-
-### 📊 GitHub Stats
-
-<p align="center">
-  <img width="48%" src="https://github-readme-stats.vercel.app/api?username=AbdullaE100&show_icons=true&theme=tokyonight&hide_border=true&count_private=true" alt="stats"/>
-  <img width="41%" src="https://github-readme-stats.vercel.app/api/top-langs/?username=AbdullaE100&layout=compact&theme=tokyonight&hide_border=true" alt="top langs"/>
-</p>
 
 ---
 
