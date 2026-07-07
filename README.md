@@ -39,8 +39,8 @@ I turn data into clear decisions. My work sits where analytics, visualisation an
 
 ### Featured Projects
 
+- **[Perpetual Futures Quant Lab](https://github.com/AbdullaE100/perp-quant-lab):** A Binance perpetual-futures trading bot with out-of-sample backtesting and quantitative strategy research.
 - **[Explainable AI for Multimodal Sentiment Analysis](https://github.com/AbdullaE100/NEW-MMSA):** A platform that fuses text and image data using explainable AI. Nominated for Best Final-Year Project at Monash University.
-- **[Data Visualisation](https://github.com/AbdullaE100/fit3179):** Interactive visualisations built with Vega-Lite that turn raw datasets into clear, explorable stories.
 - **[Email Management System](https://github.com/AbdullaE100/Email-Management):** A versatile email management application built in C++.
 
 ---
