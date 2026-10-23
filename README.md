@@ -20,6 +20,25 @@ I turn data into clear decisions. My work sits where analytics, visualisation an
 - I ship end to end and have taken AI products all the way to live release.
 - BSc Computer Science (Data Science), Monash University. CS50, Harvard.
 
+### Apps I've Shipped
+
+Designed, built and released by me, live on the App Store.
+
+<table>
+  <tr>
+    <td width="96" align="center"><a href="https://apps.apple.com/app/id6758775574"><img src="assets/toga.png" width="72" alt="TOGA app icon"/></a></td>
+    <td><b><a href="https://apps.apple.com/app/id6758775574">TOGA: Gym Workout & Calorie AI</a></b><br/>A calorie counter, workout tracker and AI coach in one. Log a meal with a photo, train with a program built around your week, and ask a coach that knows your data.</td>
+  </tr>
+  <tr>
+    <td width="96" align="center"><a href="https://apps.apple.com/app/id6763267569"><img src="assets/forge.png" width="72" alt="Forge app icon"/></a></td>
+    <td><b><a href="https://apps.apple.com/app/id6763267569">Forge: Quit Vaping & Drinking</a></b><br/>Helps people quit vaping, drinking, smoking, weed or gambling, with a sober day counter, urge tools for the worst 20 minutes, and a private AI recovery coach.</td>
+  </tr>
+  <tr>
+    <td width="96" align="center"><a href="https://apps.apple.com/app/id6746690850"><img src="assets/pledge.png" width="72" alt="Pledge app icon"/></a></td>
+    <td><b><a href="https://apps.apple.com/app/id6746690850">Pledge: Habit & Urge Tracker</a></b><br/>Break a habit one day at a time: a daily pledge, a one-tap SOS when an urge hits, and progress told as a story.</td>
+  </tr>
+</table>
+
 ### Tech Stack
 
 <p>
