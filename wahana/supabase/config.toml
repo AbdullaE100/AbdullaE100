@@ -1,0 +1,8 @@
+# Only the bits this app relies on. Deploy with:
+#   supabase functions deploy payhere-checkout --project-ref foscdnhzmpuvtydqvkmz
+#   supabase functions deploy payhere-notify --project-ref foscdnhzmpuvtydqvkmz --no-verify-jwt
+project_id = "foscdnhzmpuvtydqvkmz"
+
+[functions.payhere-notify]
+# PayHere calls this server-to-server without a Supabase JWT; the md5sig is the auth.
+verify_jwt = false
