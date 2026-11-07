@@ -32,7 +32,7 @@ export default async function PromotePage({ params, searchParams }: { params: Pr
       <Link href="/account/ads" className="mb-3 inline-flex min-h-8 items-center gap-1 text-sm font-semibold text-brand-text hover:underline">
         <ArrowLeft className="size-4" /> My ads
       </Link>
-      <h1 className="text-2xl font-extrabold sm:text-3xl">Boost your ad</h1>
+      <h1 className="text-2xl font-bold sm:text-3xl">Boost your ad</h1>
       <p className="mt-1 text-fg-muted">
         <Link href={`/ad/${l.id}/${l.slug}`} className="font-medium text-fg hover:underline">
           {l.title}

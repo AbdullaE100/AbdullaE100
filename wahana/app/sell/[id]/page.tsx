@@ -28,7 +28,7 @@ export default async function EditAdPage({ params }: { params: Promise<{ id: str
   if (l.status === "removed" || l.status === "rejected") {
     return (
       <div className="container-page py-16 text-center">
-        <h1 className="text-2xl font-extrabold">This ad can&apos;t be edited</h1>
+        <h1 className="text-2xl font-bold">This ad can&apos;t be edited</h1>
         <p className="mt-2 text-fg-muted">It was {l.status === "removed" ? "removed" : "taken down by a moderator"}. You can post a new ad instead.</p>
         <ButtonLink href="/sell" className="mt-6">
           Post a new ad

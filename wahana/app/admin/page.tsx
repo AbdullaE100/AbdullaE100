@@ -27,7 +27,7 @@ export default async function AdminPage() {
   const items: QueueItem[] = (listings ?? []).map((l) => ({ ...l, reports: (reports ?? []).filter((r) => r.listing_id === l.id) }));
   return (
     <div className="container-page py-6 sm:py-10">
-      <h1 className="text-2xl font-extrabold sm:text-3xl">Moderation</h1>
+      <h1 className="text-2xl font-bold sm:text-3xl">Moderation</h1>
       <p className="mb-6 mt-1 text-fg-muted">Ads with 3 or more reports are hidden automatically until you restore or remove them.</p>
       <ModerationQueue items={items} />
     </div>

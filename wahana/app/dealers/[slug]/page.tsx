@@ -66,7 +66,7 @@ export default async function DealerPage({ params, searchParams }: Props) {
             <span className="text-fg">{d.dealer_name}</span>
           </nav>
           <div className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5 shadow-sm sm:flex-row sm:items-start sm:p-6">
-            <span className="grid size-16 shrink-0 place-items-center rounded-2xl bg-brand text-2xl font-extrabold text-brand-fg">{(d.dealer_name ?? "?").charAt(0)}</span>
+            <span className="grid size-16 shrink-0 place-items-center rounded-2xl bg-brand text-2xl font-bold text-brand-fg">{(d.dealer_name ?? "?").charAt(0)}</span>
             <div className="min-w-0 flex-1">
               <p className="flex items-center gap-1.5 text-sm font-semibold text-brand-text">
                 <BadgeCheck className="size-4" /> Dealer

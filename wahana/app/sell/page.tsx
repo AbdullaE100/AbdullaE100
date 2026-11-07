@@ -15,7 +15,7 @@ export default async function SellPage() {
       <div className="container-page grid gap-10 py-8 sm:py-14 lg:grid-cols-2 lg:items-center">
         <div>
           <p className="text-sm font-semibold text-brand-text">Sell your vehicle</p>
-          <h1 className="mt-2 text-3xl font-extrabold sm:text-4xl">Post an ad in a few minutes. It&apos;s free.</h1>
+          <h1 className="mt-2 text-3xl font-bold sm:text-4xl">Post an ad in a few minutes. It&apos;s free.</h1>
           <ul className="mt-6 space-y-4">
             {[
               { icon: Camera, t: "Snap photos on your phone", d: "We resize them for you, so they upload quickly even on mobile data." },

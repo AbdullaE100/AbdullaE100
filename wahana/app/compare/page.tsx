@@ -42,7 +42,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
   if (list.length === 0) {
     return (
       <div className="container-page py-8 sm:py-12">
-        <h1 className="mb-6 text-2xl font-extrabold sm:text-3xl">Compare vehicles</h1>
+        <h1 className="mb-6 text-2xl font-bold sm:text-3xl">Compare vehicles</h1>
         <EmptyState
           icon={Columns3}
           title="Pick up to three vehicles"
@@ -83,7 +83,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
       <SyncCompare ids={shown} />
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold sm:text-3xl">Compare vehicles</h1>
+          <h1 className="text-2xl font-bold sm:text-3xl">Compare vehicles</h1>
           <p className="mt-1 text-fg-muted">
             <Trophy className="mr-1 inline size-4 text-good" aria-hidden />
             Green marks the best value in each row.
@@ -119,7 +119,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
                         <Link href={`/ad/${l.id}/${l.slug}`} className="line-clamp-2 text-sm font-semibold leading-snug hover:underline sm:text-[15px]">
                           {l.title}
                         </Link>
-                        <p className="tabular mt-1 text-[15px] font-extrabold sm:text-lg">{formatLKR(l.price_lkr)}</p>
+                        <p className="tabular mt-1 text-[15px] font-bold sm:text-lg">{formatLKR(l.price_lkr)}</p>
                       </div>
                     </div>
                   </th>

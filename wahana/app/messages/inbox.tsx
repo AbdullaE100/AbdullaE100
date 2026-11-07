@@ -79,7 +79,7 @@ export function InboxShell({ conversations, children }: { conversations: Convers
       <div className="grid overflow-hidden lg:h-[calc(100dvh-10rem)] lg:grid-cols-[360px_minmax(0,1fr)] lg:rounded-3xl lg:border lg:border-border lg:bg-surface lg:shadow-sm">
         <section aria-label="Conversations" className={cn("flex min-h-0 flex-col lg:border-r lg:border-border", inThread && "hidden lg:flex")}>
           <div className="flex items-center justify-between px-1 pb-3 pt-5 lg:px-5 lg:pt-5">
-            <h1 className="text-2xl font-extrabold">Messages</h1>
+            <h1 className="text-2xl font-bold">Messages</h1>
           </div>
           {conversations.length === 0 ? (
             <div className="flex flex-1 flex-col items-center justify-center rounded-3xl border border-dashed border-border-strong px-6 py-14 text-center lg:m-4">

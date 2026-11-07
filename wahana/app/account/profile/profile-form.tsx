@@ -114,7 +114,7 @@ export function ProfileForm({ userId, email, initial, districts, resetMode }: { 
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-extrabold sm:text-3xl">Profile and settings</h1>
+      <h1 className="mb-1 text-2xl font-bold sm:text-3xl">Profile and settings</h1>
       <p className="mb-6 text-fg-muted">Signed in as {email}</p>
 
       {resetMode && (

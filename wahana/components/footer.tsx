@@ -14,7 +14,7 @@ const MAKES = [
 
 export function Footer() {
   return (
-    <footer className="mt-16 border-t border-border bg-surface pb-24 md:pb-0">
+    <footer className="border-t border-border bg-surface-2 pb-24 md:pb-0">
       <div className="container-page grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <Logo />

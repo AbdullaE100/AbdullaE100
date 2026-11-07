@@ -1,29 +1,31 @@
 @import "tailwindcss";
-@import "@fontsource-variable/inter/wght.css";
-@import "@fontsource-variable/plus-jakarta-sans/wght.css";
+@import "@fontsource/lato/400.css";
+@import "@fontsource/lato/700.css";
+@import "@fontsource/lato/900.css";
 
 /* ---------------------------------------------------------------------------
    Design tokens. Every colour in the app comes from here so light and dark
-   themes stay in sync. Brand: Ceylon sapphire blue, with saffron for promos.
+   themes stay in sync. Clean white property-portal look with a green brand
+   (shades chosen so white text on green passes WCAG AA), saffron for promos.
    ------------------------------------------------------------------------- */
 :root {
   color-scheme: light;
-  --bg: #f5f6f8;
+  --bg: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f0f2f5;
-  --surface-3: #e6e9ee;
-  --border: #e2e5ea;
-  --border-strong: #cbd1d9;
-  --fg: #0d1117;
-  --fg-muted: #4d5664;
-  --fg-subtle: #636d7c;
+  --surface-2: #f5f6f7;
+  --surface-3: #e9ecef;
+  --border: #e3e6ea;
+  --border-strong: #cdd2d8;
+  --fg: #1f2328;
+  --fg-muted: #50575f;
+  --fg-subtle: #646c76;
 
-  --brand: #1f4fe0;
-  --brand-hover: #1a44c4;
+  --brand: #168650;
+  --brand-hover: #0f7346;
   --brand-fg: #ffffff;
-  --brand-text: #1f4fe0;
-  --brand-soft: #eaf0ff;
-  --brand-soft-fg: #1a3fb0;
+  --brand-text: #127f4a;
+  --brand-soft: #e7f5ee;
+  --brand-soft-fg: #0b6338;
 
   --accent: #f5a623;
   --accent-soft: #fff3dc;
@@ -37,11 +39,11 @@
   --danger-soft: #fdecea;
   --danger-solid: #c0261a;
 
-  --ring: rgb(31 79 224 / 0.4);
-  --overlay: rgb(9 12 18 / 0.55);
-  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.06), 0 1px 1px rgb(15 23 42 / 0.03);
-  --shadow-md: 0 6px 16px -4px rgb(15 23 42 / 0.1), 0 2px 4px -2px rgb(15 23 42 / 0.06);
-  --shadow-lg: 0 24px 48px -12px rgb(15 23 42 / 0.25);
+  --ring: rgb(22 134 80 / 0.35);
+  --overlay: rgb(10 14 12 / 0.55);
+  --shadow-sm: 0 1px 2px rgb(16 24 20 / 0.05);
+  --shadow-md: 0 4px 16px -2px rgb(16 24 20 / 0.1);
+  --shadow-lg: 0 20px 44px -12px rgb(16 24 20 / 0.24);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -57,12 +59,12 @@
     --fg-muted: #a3acba;
     --fg-subtle: #8b94a3;
 
-    --brand: #3d68f5;
-    --brand-hover: #5279ff;
+    --brand: #168650;
+    --brand-hover: #127f4a;
     --brand-fg: #ffffff;
-    --brand-text: #8aa6ff;
-    --brand-soft: #18213d;
-    --brand-soft-fg: #b3c5ff;
+    --brand-text: #4fd394;
+    --brand-soft: #12301f;
+    --brand-soft-fg: #a6ebc6;
 
     --accent: #f5b13d;
     --accent-soft: #33280f;
@@ -75,7 +77,7 @@
     --danger: #ff6b5e;
     --danger-soft: #3a1512;
 
-    --ring: rgb(138 166 255 / 0.5);
+    --ring: rgb(79 211 148 / 0.45);
     --overlay: rgb(0 0 0 / 0.65);
     --shadow-sm: 0 0 0 1px rgb(255 255 255 / 0.02);
     --shadow-md: 0 8px 24px -6px rgb(0 0 0 / 0.5);
@@ -115,8 +117,14 @@
   --shadow-md: var(--shadow-md);
   --shadow-lg: var(--shadow-lg);
 
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans Sinhala", "Noto Sans Tamil", sans-serif;
-  --font-display: "Plus Jakarta Sans Variable", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Lato", ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans Sinhala", "Noto Sans Tamil", sans-serif;
+  --font-display: "Lato", ui-sans-serif, system-ui, sans-serif;
+
+  /* Flatter, squarer corners than the Tailwind defaults. */
+  --radius-lg: 0.375rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.625rem;
+  --radius-3xl: 0.75rem;
 
   --animate-fade-in: fade-in 160ms ease-out;
   --animate-rise: rise 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -156,14 +164,13 @@
     background: var(--bg);
     color: var(--fg);
     font-family: var(--font-sans);
-    font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.015em;
+    letter-spacing: -0.005em;
     text-wrap: balance;
   }
   p { text-wrap: pretty; }

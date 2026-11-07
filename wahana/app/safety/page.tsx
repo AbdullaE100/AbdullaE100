@@ -52,7 +52,7 @@ export default function SafetyPage() {
       <span className="grid size-12 place-items-center rounded-2xl bg-good-soft text-good">
         <ShieldCheck className="size-6" />
       </span>
-      <h1 className="mt-4 text-3xl font-extrabold sm:text-4xl">Buying and selling safely</h1>
+      <h1 className="mt-4 text-3xl font-bold sm:text-4xl">Buying and selling safely</h1>
       <p className="mt-2 text-fg-muted">Most people are genuine. These habits protect you from the few who aren&apos;t.</p>
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         {SECTIONS.map(({ icon: I, title, points }) => (

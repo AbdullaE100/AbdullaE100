@@ -35,7 +35,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
   return (
     <div className="container-page grid min-h-[calc(100dvh-4rem)] items-start gap-10 py-8 sm:py-14 lg:grid-cols-2 lg:items-center">
       <div className="mx-auto w-full max-w-md">
-        <h1 className="text-3xl font-extrabold">{heading}</h1>
+        <h1 className="text-3xl font-bold">{heading}</h1>
         <p className="mb-6 mt-2 text-fg-muted">One account for buying and selling. It&apos;s free.</p>
         {notice && (
           <p className={`mb-5 flex items-start gap-2 rounded-xl border p-3 text-sm ${notice.tone === "good" ? "border-good/30 bg-good-soft" : "border-danger/30 bg-danger-soft text-danger"}`}>

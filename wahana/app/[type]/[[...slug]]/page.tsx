@@ -3,11 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { Results } from "@/components/browse/results";
-import { describeSearch, filtersToHref, filtersToRpc, parseFilters, type Filters, type Names } from "@/lib/search";
+import { describeSearch, filtersToHref, filtersToRpc, parseFilters, withFilter, type Filters, type Names } from "@/lib/search";
 import { resolveNames } from "@/lib/ref";
-import { searchFacets, searchListings } from "@/lib/queries";
+import { homeSummary, searchFacets, searchListings } from "@/lib/queries";
 import { typeBySlug } from "@/lib/constants";
-import { formatNumber } from "@/lib/format";
 
 type Props = { params: Promise<{ type: string; slug?: string[] }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -37,7 +36,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function BrowsePage(props: Props) {
   const { f, names } = await load(props);
   const rpc = filtersToRpc(f);
-  const [result, facets] = await Promise.all([searchListings(rpc), searchFacets(rpc)]);
+  const [result, facets, summary] = await Promise.all([searchListings(rpc), searchFacets(rpc), homeSummary()]);
   const { title } = describeSearch(f, names);
   const t = typeBySlug(f.type);
 
@@ -47,7 +46,19 @@ export default async function BrowsePage(props: Props) {
   if (f.make && names.make) crumbs.push({ label: names.make, href: filtersToHref({ type: f.type, make: f.make }) });
   if (f.model && names.model) crumbs.push({ label: names.model, href: filtersToHref({ type: f.type, make: f.make, model: f.model }) });
 
-  const related = f.make && !f.model ? facets?.model?.slice(0, 12) : !f.make ? facets?.make?.slice(0, 12) : null;
+  // Chips that narrow the current search one level deeper, keeping other filters.
+  const quickLinks = !f.make
+    ? (facets?.make ?? []).slice(0, 14).map((m) => ({ href: filtersToHref(withFilter(f, { make: m.slug })), label: m.name, count: m.count }))
+    : !f.model
+      ? (facets?.model ?? []).slice(0, 14).map((m) => ({ href: filtersToHref(withFilter(f, { model: m.slug })), label: m.name, count: m.count }))
+      : (facets?.district ?? []).slice(0, 14).map((d) => ({ href: filtersToHref(withFilter(f, { district: d.slug })), label: d.name, count: d.count }));
+  const popular = {
+    title: t ? `Popular ${t.plural.toLowerCase()}` : "Popular searches",
+    links: summary.popular_models
+      .filter((m) => !f.type || m.type === f.type)
+      .slice(0, 12)
+      .map((m) => ({ href: `/${typeBySlug(m.type)?.path ?? "vehicles"}/${m.make_slug}/${m.model_slug}`, label: `${m.make} ${m.model}`, count: m.count })),
+  };
 
   return (
     <Results
@@ -77,25 +88,8 @@ export default async function BrowsePage(props: Props) {
           </ol>
         </nav>
       }
-      footer={
-        related && related.length > 1 ? (
-          <section className="mt-12 border-t border-border pt-8">
-            <h2 className="text-lg font-bold">{f.make ? `Popular ${names.make} models` : `Popular makes${t ? ` for ${t.plural.toLowerCase()}` : ""}`}</h2>
-            <ul className="mt-3 flex flex-wrap gap-2">
-              {related.map((m) => (
-                <li key={m.slug}>
-                  <Link
-                    href={filtersToHref(f.make ? { type: f.type, make: f.make, model: m.slug } : { type: f.type, make: m.slug })}
-                    className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-2 text-[15px] font-medium hover:border-border-strong hover:bg-surface-2"
-                  >
-                    {m.name} <span className="tabular text-sm font-normal text-fg-subtle">{formatNumber(m.count)}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null
-      }
+      quickLinks={quickLinks}
+      popular={popular}
     />
   );
 }

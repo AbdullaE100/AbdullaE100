@@ -65,7 +65,7 @@ export function SavedSearches({ initial }: { initial: Row[] }) {
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-extrabold sm:text-3xl">Saved searches</h1>
+      <h1 className="mb-1 text-2xl font-bold sm:text-3xl">Saved searches</h1>
       <p className="mb-5 text-fg-muted">See what&apos;s new since you last looked.</p>
       {rows.length === 0 ? (
         <EmptyState icon={Bookmark} title="No saved searches" body="Run a search, then tap Save to come back to it later." action={<ButtonLink href="/vehicles">Start a search</ButtonLink>} />

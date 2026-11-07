@@ -19,7 +19,7 @@ import { cn } from "@/lib/cn";
 export function SortSelect({ className }: { className?: string }) {
   const { filters: f, apply } = useSearch();
   return (
-    <label className={cn("relative inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-surface pl-3 pr-2 text-sm font-semibold shadow-sm hover:border-border-strong", className)}>
+    <label className={cn("relative inline-flex h-11 items-center gap-2 rounded-lg border border-border bg-surface pl-3 pr-2 text-[15px] font-bold hover:border-border-strong", className)}>
       <ArrowUpDown className="size-4 text-fg-subtle" aria-hidden />
       <span className="sr-only">Sort by</span>
       <select
@@ -64,7 +64,7 @@ export function SaveSearchButton({ label, compact }: { label: string; compact?: 
     return (
       <Link
         href={`/signin?next=${encodeURIComponent(query)}`}
-        className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-surface px-3 text-sm font-semibold shadow-sm hover:border-border-strong"
+        className="inline-flex h-11 items-center gap-2 rounded-lg border border-brand/50 bg-surface px-3.5 text-[15px] font-bold text-brand-text hover:bg-brand-soft"
       >
         <Bookmark className="size-4" /> <span className={cn(compact && "max-sm:sr-only")}>{compact ? "Save" : "Save search"}</span>
       </Link>
@@ -101,8 +101,8 @@ export function SaveSearchButton({ label, compact }: { label: string; compact?: 
       disabled={busy}
       aria-pressed={!!savedId}
       className={cn(
-        "inline-flex h-10 items-center gap-2 rounded-xl border px-3 text-sm font-semibold shadow-sm",
-        savedId ? "border-brand bg-brand-soft text-brand-soft-fg" : "border-border bg-surface hover:border-border-strong",
+        "inline-flex h-11 items-center gap-2 rounded-lg border px-3.5 text-[15px] font-bold",
+        savedId ? "border-brand bg-brand-soft text-brand-soft-fg" : "border-brand/50 bg-surface text-brand-text hover:bg-brand-soft",
       )}
     >
       {busy ? <Spinner className="size-4" /> : savedId ? <BookmarkCheck className="size-4" /> : <Bookmark className="size-4" />}
@@ -141,7 +141,25 @@ export function ActiveChips({ names }: { names: Names }) {
   );
 }
 
-export function MobileFilters({ facets, names, total, hideType, hideSeller }: { facets: Facets | null; names: Names; total: number; hideType?: boolean; hideSeller?: boolean }) {
+export function MobileFilters({
+  facets,
+  names,
+  total,
+  hideType,
+  hideSeller,
+  label = "Filters",
+  className,
+  showCount = true,
+}: {
+  showCount?: boolean;
+  facets: Facets | null;
+  names: Names;
+  total: number;
+  hideType?: boolean;
+  hideSeller?: boolean;
+  label?: string;
+  className?: string;
+}) {
   const [open, setOpen] = useState(false);
   const { filters, pending, replace } = useSearch();
   const n = countActive(filters);
@@ -150,10 +168,10 @@ export function MobileFilters({ facets, names, total, hideType, hideSeller }: { 
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-surface px-3 text-sm font-semibold shadow-sm hover:border-border-strong lg:hidden"
+        className={cn("inline-flex h-11 shrink-0 items-center gap-2 rounded-lg border border-border bg-surface px-3.5 text-[15px] font-bold hover:border-border-strong", className)}
       >
-        <SlidersHorizontal className="size-4" /> Filters
-        {n > 0 && <span className="grid size-5 place-items-center rounded-full bg-brand text-[11px] text-brand-fg">{n}</span>}
+        <SlidersHorizontal className="size-4" /> {label}
+        {showCount && n > 0 && <span className="grid size-5 place-items-center rounded-full bg-brand text-[11px] text-brand-fg">{n}</span>}
       </button>
       <Dialog
         open={open}

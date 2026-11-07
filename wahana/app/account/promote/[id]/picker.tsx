@@ -70,7 +70,7 @@ export function PromotePicker({ listingId, products }: { listingId: number; prod
                   <span className={cn("grid size-6 place-items-center rounded-full border-2", on ? "border-brand bg-brand text-brand-fg" : "border-border-strong")}>{on && <Check className="size-3.5" strokeWidth={3} />}</span>
                 </span>
                 <span className="mt-4 font-bold">{p.name}</span>
-                <span className="tabular mt-0.5 text-2xl font-extrabold">{formatLKR(p.price_lkr)}</span>
+                <span className="tabular mt-0.5 text-2xl font-bold">{formatLKR(p.price_lkr)}</span>
                 <span className="mt-2 text-sm text-fg-muted">{BLURB[p.kind] ?? p.description}</span>
                 {p.kind !== "bump" && <span className="mt-2 text-xs font-medium text-fg-subtle">Includes a bump to the top.</span>}
               </span>

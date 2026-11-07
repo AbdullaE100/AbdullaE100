@@ -135,7 +135,7 @@ export function Valuer() {
               <p className="text-sm font-semibold text-fg-muted">
                 {year} {make?.name} {model?.name}, {CONDITIONS.find((c) => c.value === condition)?.label.toLowerCase()}
               </p>
-              <p className="tabular mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
+              <p className="tabular mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
                 {s.p25 != null && s.p75 != null && s.peer_count >= 4 ? `${formatLKRCompact(s.p25)} – ${formatLKRCompact(s.p75)}` : `${formatLKRCompact(s.min)} – ${formatLKRCompact(s.max)}`}
               </p>
               <p className="mt-1 text-[15px] text-fg-muted">

@@ -1,24 +1,18 @@
 "use client";
 import { useId, useMemo, useState } from "react";
 import { formatLKR, formatLakhs } from "@/lib/format";
+import { LEASE_DEFAULTS, monthlyPayment } from "@/lib/finance";
 import { Input, Label } from "@/components/ui/field";
 import { ChoiceChips } from "@/components/ui/choice";
 
 const TERMS = ["12", "24", "36", "48", "60", "72"] as const;
 
-export function monthlyPayment(principal: number, annualRate: number, months: number) {
-  if (principal <= 0 || months <= 0) return 0;
-  const r = annualRate / 100 / 12;
-  if (r === 0) return principal / months;
-  return (principal * r) / (1 - Math.pow(1 + r, -months));
-}
-
 export function LeasingCalculator({ price: initial, editablePrice = false, compact = false }: { price?: number; editablePrice?: boolean; compact?: boolean }) {
   const id = useId();
   const [price, setPrice] = useState(initial ?? 6_000_000);
-  const [downPct, setDownPct] = useState(30);
+  const [downPct, setDownPct] = useState(LEASE_DEFAULTS.downPct);
   const [term, setTerm] = useState<(typeof TERMS)[number]>("60");
-  const [rate, setRate] = useState("14");
+  const [rate, setRate] = useState(String(LEASE_DEFAULTS.rate));
 
   const { down, loan, monthly, interest } = useMemo(() => {
     const down = Math.round((price * downPct) / 100);
@@ -77,22 +71,22 @@ export function LeasingCalculator({ price: initial, editablePrice = false, compa
         <div className="flex flex-col justify-between rounded-2xl bg-brand-soft p-5 text-brand-soft-fg">
           <div>
             <p className="text-sm font-semibold">Estimated monthly rental</p>
-            <p className="tabular mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl" aria-live="polite">
+            <p className="tabular mt-1 text-3xl font-bold tracking-tight sm:text-4xl" aria-live="polite">
               {formatLKR(monthly)}
             </p>
-            <p className="mt-1 text-sm opacity-80">for {Number(term) / 12} years</p>
+            <p className="mt-1 text-sm">for {Number(term) / 12} years</p>
           </div>
           <dl className="tabular mt-6 space-y-1.5 text-sm">
             <div className="flex justify-between gap-4">
-              <dt className="opacity-80">Amount financed</dt>
+              <dt>Amount financed</dt>
               <dd className="font-semibold">{formatLKR(loan)}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="opacity-80">Total interest</dt>
+              <dt>Total interest</dt>
               <dd className="font-semibold">{formatLKR(interest)}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="opacity-80">Total cost</dt>
+              <dt>Total cost</dt>
               <dd className="font-semibold">{formatLKR(down + loan + interest)}</dd>
             </div>
           </dl>

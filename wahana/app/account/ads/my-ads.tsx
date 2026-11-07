@@ -62,7 +62,7 @@ function Row({ ad }: { ad: MyAd }) {
   return (
     <li className="rounded-2xl border border-border bg-surface p-3 shadow-sm sm:p-4">
       <div className="flex gap-3 sm:gap-4">
-        <Link href={`/ad/${ad.id}/${ad.slug}`} className="relative aspect-[4/3] w-28 shrink-0 overflow-hidden rounded-xl bg-surface-2 sm:w-40">
+        <Link href={`/ad/${ad.id}/${ad.slug}`} aria-hidden tabIndex={-1} className="relative aspect-[4/3] w-28 shrink-0 overflow-hidden rounded-xl bg-surface-2 sm:w-40">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {src ? <img src={src} alt="" className="h-full w-full object-cover" /> : <VehiclePlaceholder type={ad.vehicle_type} seed={ad.id} />}
         </Link>
@@ -147,7 +147,7 @@ export function MyAds({ ads }: { ads: MyAd[] }) {
   return (
     <div>
       <div className="mb-5 flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-extrabold sm:text-3xl">My ads</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">My ads</h1>
         <ButtonLink href="/sell">
           <Plus className="size-4" strokeWidth={2.6} /> Post an ad
         </ButtonLink>
@@ -166,7 +166,7 @@ export function MyAds({ ads }: { ads: MyAd[] }) {
             ].map(([k, v]) => (
               <div key={k} className="rounded-2xl border border-border bg-surface p-4">
                 <dt className="text-sm text-fg-muted">{k}</dt>
-                <dd className="tabular mt-0.5 text-2xl font-extrabold">{formatNumber(v as number)}</dd>
+                <dd className="tabular mt-0.5 text-2xl font-bold">{formatNumber(v as number)}</dd>
               </div>
             ))}
           </dl>

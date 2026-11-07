@@ -57,15 +57,53 @@ export function Gallery({ photos, title, type, seed }: { photos: Photo[]; title:
 
   if (n === 0) {
     return (
-      <div className="relative aspect-[4/3] overflow-hidden bg-surface-2 sm:rounded-3xl lg:aspect-[16/10]">
+      <div className="relative aspect-[4/3] overflow-hidden bg-surface-2 sm:rounded-2xl lg:aspect-auto lg:h-[440px]">
         <VehiclePlaceholder type={type} seed={seed} label="The seller hasn't added photos yet" />
       </div>
     );
   }
 
+  const open = (i: number) => {
+    setIndex(i);
+    setZoom(true);
+  };
+  const tile = (i: number, cls: string, eager = false) => {
+    const p = photos[i];
+    return (
+      <button key={p.id} type="button" onClick={() => open(i)} className={cn("group/tile relative overflow-hidden bg-surface-2", cls)} aria-label={`Open photo ${i + 1} of ${n}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={photoUrl(i === 0 ? p.path : p.thumb_path ?? p.path)!}
+          alt={i === 0 ? title : ""}
+          loading={eager ? "eager" : "lazy"}
+          fetchPriority={eager ? "high" : "auto"}
+          decoding="async"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover/tile:scale-[1.03]"
+        />
+      </button>
+    );
+  };
+
   return (
-    <div className="space-y-2.5">
-      <div className="group relative overflow-hidden bg-black sm:rounded-3xl">
+    <div>
+      {/* Desktop mosaic: one large photo and two stacked beside it */}
+      <div className={cn("relative hidden h-[440px] gap-2 overflow-hidden rounded-2xl lg:grid", n >= 2 ? "grid-cols-3 grid-rows-2" : "grid-cols-1")}>
+        {tile(0, n >= 2 ? "col-span-2 row-span-2" : "", true)}
+        {n === 2 && tile(1, "row-span-2")}
+        {n >= 3 && tile(1, "")}
+        {n >= 3 && tile(2, "")}
+        <button
+          type="button"
+          onClick={() => open(0)}
+          className="absolute bottom-4 right-4 inline-flex h-10 items-center gap-2 rounded-lg bg-surface px-3.5 text-sm font-bold text-fg shadow-md hover:bg-surface-2"
+        >
+          <Expand className="size-4" /> {n > 1 ? `View all ${n} photos` : "View photo"}
+        </button>
+      </div>
+
+      {/* Phones and tablets: swipeable carousel */}
+      <div className="space-y-2.5 lg:hidden">
+      <div className="group relative overflow-hidden bg-black sm:rounded-2xl">
         <div ref={track} className="no-scrollbar flex aspect-[4/3] snap-x snap-mandatory overflow-x-auto lg:aspect-[16/10]" aria-roledescription="carousel" aria-label={`${title} photos`}>
           {photos.map((p, i) => (
             <button
@@ -134,6 +172,7 @@ export function Gallery({ photos, title, type, seed }: { photos: Photo[]; title:
           ))}
         </div>
       )}
+      </div>
 
       <dialog
         ref={dialog}

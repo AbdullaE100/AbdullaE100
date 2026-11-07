@@ -1,13 +1,16 @@
-import { Crown, SearchX } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Calculator, Crown, Gauge, SearchX } from "lucide-react";
 import type { Facets, SearchResult } from "@/lib/types";
 import type { Filters, Names } from "@/lib/search";
-import { ListingCard } from "@/components/listing-card";
+import { ResultCard } from "@/components/result-card";
 import { formatNumber } from "@/lib/format";
 import { SearchProvider, PendingArea } from "./search-context";
-import { FilterPanel } from "./filter-panel";
-import { ActiveChips, MobileFilters, SaveSearchButton, SortSelect } from "./toolbar";
+import { ActiveChips, SaveSearchButton, SortSelect } from "./toolbar";
+import { FilterBar } from "./filter-bar";
 import { Pagination } from "./pagination";
 import { ClearFiltersButton } from "./clear-filters";
+
+export type QuickLink = { href: string; label: string; count?: number };
 
 /** Faceted results layout shared by browse pages and dealer pages. */
 export function Results({
@@ -23,6 +26,8 @@ export function Results({
   saveLabel,
   header,
   footer,
+  quickLinks,
+  popular,
 }: {
   filters: Filters;
   result: SearchResult;
@@ -36,6 +41,10 @@ export function Results({
   saveLabel?: string;
   header?: React.ReactNode;
   footer?: React.ReactNode;
+  /** Chips under the heading to narrow the search (models, makes or towns). */
+  quickLinks?: QuickLink[];
+  /** Sidebar "Popular searches" links. */
+  popular?: { title: string; links: QuickLink[] };
 }) {
   const page = Number(filters.page || 1);
   const topIds = new Set(result.top.map((t) => t.id));
@@ -43,83 +52,125 @@ export function Results({
 
   return (
     <SearchProvider filters={filters} base={base ?? null}>
-      <div className="container-page pb-6 pt-5 sm:pt-8">
+      <div className="sticky top-16 z-30 border-b border-border bg-surface lg:static">
+        <div className="container-page py-3">
+          <FilterBar facets={facets} names={names} total={result.total} hideType={hideType} hideSeller={hideSeller} saveLabel={saveLabel ?? title} />
+        </div>
+      </div>
+
+      <div className="container-page pb-6 pt-4 sm:pt-6">
         {header}
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-extrabold sm:text-3xl">{title}</h1>
-            <p className="mt-1 text-[15px] text-fg-muted">
-              <span className="tabular font-semibold text-fg">{formatNumber(result.total)}</span> {result.total === 1 ? "ad" : "ads"}
-              {page > 1 && ` · page ${page}`}
-            </p>
-          </div>
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h1 className="text-[22px] font-bold sm:text-[28px]">{title}</h1>
+          <p className="text-[15px] text-fg-muted">
+            <span className="tabular font-bold text-fg">{formatNumber(result.total)}</span> {result.total === 1 ? "result" : "results"}
+            {page > 1 && ` · page ${page}`}
+          </p>
         </div>
 
-        <div className="mt-4 grid gap-8 lg:mt-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-          <aside className="hidden lg:block" aria-label="Filters">
-            <div className="sticky top-[7.5rem] max-h-[calc(100dvh-8.5rem)] overflow-y-auto overscroll-contain rounded-2xl border border-border bg-surface p-5 shadow-sm">
-              <h2 className="sr-only">Filters</h2>
-              <FilterPanel facets={facets} names={names} hideType={hideType} hideSeller={hideSeller} />
-            </div>
-          </aside>
+        {quickLinks && quickLinks.length > 1 && (
+          <nav aria-label="Narrow your search" className="no-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+            {quickLinks.map((q) => (
+              <Link
+                key={q.href}
+                href={q.href}
+                className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface px-3.5 text-sm font-bold text-fg hover:border-brand hover:text-brand-text"
+              >
+                {q.label}
+                {q.count != null && <span className="tabular font-normal text-fg-subtle">({formatNumber(q.count)})</span>}
+              </Link>
+            ))}
+          </nav>
+        )}
 
+        <div className="mt-5 grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div className="min-w-0">
-            <div className="sticky top-16 z-30 -mx-4 mb-4 border-b border-border bg-bg/90 px-4 py-3 backdrop-blur-lg sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:mb-5 lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
-              <div className="flex items-center gap-2">
-                <MobileFilters facets={facets} names={names} total={result.total} hideType={hideType} hideSeller={hideSeller} />
-                <div className="hidden min-w-0 flex-1 lg:block">
-                  <ActiveChips names={names} />
-                </div>
-                <SortSelect className="ml-auto shrink-0" />
-                <SaveSearchButton label={saveLabel ?? title} compact />
-              </div>
-              <div className="mt-2.5 empty:hidden lg:hidden">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="min-w-0 flex-1">
                 <ActiveChips names={names} />
               </div>
+              <SortSelect className="ml-auto shrink-0 sm:hidden lg:inline-flex" />
             </div>
-          <PendingArea>
-            <h2 className="sr-only">Results</h2>
-            {result.top.length > 0 && (
-              <section aria-label="Top ads" className="mb-6 rounded-3xl border border-accent/40 bg-accent-soft/40 p-3 sm:p-4">
-                <p className="mb-3 flex items-center gap-1.5 px-1 text-sm font-semibold text-accent-fg">
-                  <Crown className="size-4" /> Top ads
-                </p>
-                <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
-                  {result.top.map((l) => (
-                    <ListingCard key={l.id} l={l} layout="responsive" eager />
+            <PendingArea>
+              <h2 className="sr-only">Results</h2>
+              {result.top.length > 0 && (
+                <section aria-label="Top ads" className="mb-5">
+                  <p className="mb-2 flex items-center gap-1.5 text-sm font-bold text-accent-fg">
+                    <Crown className="size-4" /> Top ads
+                  </p>
+                  <ul className="space-y-4">
+                    {result.top.map((l) => (
+                      <li key={l.id}>
+                        <ResultCard l={l} eager />
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
+              {items.length > 0 ? (
+                <ul className="space-y-4">
+                  {items.map((l, i) => (
+                    <li key={l.id}>
+                      <ResultCard l={l} eager={i < 2} />
+                    </li>
                   ))}
+                </ul>
+              ) : result.top.length === 0 ? (
+                <div className="flex flex-col items-center rounded-2xl border border-dashed border-border-strong bg-surface px-6 py-16 text-center">
+                  <span className="grid size-14 place-items-center rounded-xl bg-surface-2 text-fg-muted">
+                    <SearchX className="size-7" />
+                  </span>
+                  <h2 className="mt-4 text-xl font-bold">No ads match all of that</h2>
+                  <p className="mt-1.5 max-w-sm text-[15px] text-fg-muted">
+                    Try removing a filter or widening the price range. You can also save this search and check back later.
+                  </p>
+                  <div className="mt-5 flex flex-wrap justify-center gap-2">
+                    <ClearFiltersButton />
+                    <SaveSearchButton label={saveLabel ?? title} />
+                  </div>
                 </div>
+              ) : null}
+
+              <Pagination page={page} total={result.total} pageSize={result.page_size} hrefFor={hrefFor} />
+              {footer}
+            </PendingArea>
+          </div>
+
+          <aside className="hidden space-y-5 lg:block" aria-label="More ways to search">
+            {popular && popular.links.length > 0 && (
+              <section className="rounded-2xl border border-border bg-surface p-5">
+                <h2 className="text-base font-bold">{popular.title}</h2>
+                <ul className="mt-3 space-y-0.5">
+                  {popular.links.map((p) => (
+                    <li key={p.href}>
+                      <Link href={p.href} className="flex min-h-9 items-center justify-between gap-2 text-[15px] text-fg hover:text-brand-text hover:underline">
+                        <span className="truncate">{p.label}</span>
+                        {p.count != null && <span className="tabular text-sm text-fg-subtle">({formatNumber(p.count)})</span>}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </section>
             )}
-
-            {items.length > 0 ? (
-              <ul className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
-                {items.map((l, i) => (
-                  <li key={l.id} className="contents">
-                    <ListingCard l={l} layout="responsive" eager={i < 3} />
-                  </li>
-                ))}
-              </ul>
-            ) : result.top.length === 0 ? (
-              <div className="flex flex-col items-center rounded-3xl border border-dashed border-border-strong bg-surface px-6 py-16 text-center">
-                <span className="grid size-14 place-items-center rounded-2xl bg-surface-2 text-fg-muted">
-                  <SearchX className="size-7" />
-                </span>
-                <h2 className="mt-4 text-xl font-bold">No ads match all of that</h2>
-                <p className="mt-1.5 max-w-sm text-[15px] text-fg-muted">
-                  Try removing a filter or widening the price range. You can also save this search and check back later.
-                </p>
-                <div className="mt-5 flex flex-wrap justify-center gap-2">
-                  <ClearFiltersButton />
-                  <SaveSearchButton label={saveLabel ?? title} />
-                </div>
-              </div>
-            ) : null}
-
-            <Pagination page={page} total={result.total} pageSize={result.page_size} hrefFor={hrefFor} />
-            {footer}
-          </PendingArea>
-          </div>
+            <Link href="/value" className="group block rounded-2xl border border-border bg-brand-soft p-5 transition hover:border-brand">
+              <Gauge className="size-7 text-brand-soft-fg" />
+              <p className="mt-3 text-lg font-bold text-brand-soft-fg">What&apos;s my vehicle worth?</p>
+              <p className="mt-1 text-[15px] text-fg-muted">See what similar vehicles are listed for, based on live ads.</p>
+              <span className="mt-3 inline-flex items-center gap-1 font-bold text-brand-soft-fg underline-offset-2 group-hover:underline">
+                Check now <ArrowRight className="size-4" />
+              </span>
+            </Link>
+            <Link href="/leasing" className="group flex items-center gap-4 rounded-2xl border border-border bg-surface p-5 transition hover:border-brand">
+              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent-fg">
+                <Calculator className="size-5" />
+              </span>
+              <span>
+                <span className="block font-bold group-hover:text-brand-text">Leasing calculator</span>
+                <span className="block text-sm text-fg-muted">Estimate your monthly rental</span>
+              </span>
+            </Link>
+          </aside>
         </div>
       </div>
     </SearchProvider>

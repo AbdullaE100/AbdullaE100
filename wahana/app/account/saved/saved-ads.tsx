@@ -5,7 +5,7 @@ import { formatLKRCompact } from "@/lib/format";
 import { useFavourites, useSession } from "@/app/providers";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { ListingCard as Card } from "@/lib/types";
-import { ListingCard, ListingCardSkeleton } from "@/components/listing-card";
+import { ResultCard, ResultCardSkeleton } from "@/components/result-card";
 import { EmptyState } from "@/components/empty-state";
 import { Button, ButtonLink } from "@/components/ui/button";
 
@@ -63,12 +63,12 @@ export function SavedAds() {
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-extrabold sm:text-3xl">Saved ads</h1>
+      <h1 className="mb-1 text-2xl font-bold sm:text-3xl">Saved ads</h1>
       <p className="mb-5 text-fg-muted">{session ? "Synced to your account." : "Saved on this device. Sign in to keep them everywhere."}</p>
       {items === null ? (
-        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+        <div className="space-y-4">
           {Array.from({ length: 3 }, (_, i) => (
-            <ListingCardSkeleton key={i} layout="responsive" />
+            <ResultCardSkeleton key={i} />
           ))}
         </div>
       ) : items.length === 0 && gone.length === 0 ? (
@@ -90,12 +90,11 @@ export function SavedAds() {
               </Button>
             </div>
           )}
-          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+          <div className="space-y-4">
             {items.map((l) => (
-              <ListingCard
+              <ResultCard
                 key={l.id}
                 l={l}
-                layout="responsive"
                 note={
                   drops[l.id] ? (
                     <p className="inline-flex items-center gap-1 text-[13px] font-semibold text-good">

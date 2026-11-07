@@ -28,7 +28,7 @@ A vehicle marketplace for Sri Lanka: buy, sell and price cars, SUVs, vans, bikes
 **Staff**
 - `/admin` moderation queue: ads with 3 or more reports are hidden automatically and can be restored or removed here.
 
-Light and dark themes follow the device, and the whole site passes automated WCAG 2.1 AA checks (axe-core) on phone and desktop, in both themes. Loading skeletons keep slow connections feeling responsive. The app works in any modern browser and can be installed as a PWA.
+The look follows the clean property-portal style people know from Bayut: white pages, a green brand, a filter bar of dropdowns over wide result cards with Call / WhatsApp / Chat, and a photo mosaic with a sticky seller card on each ad. Light and dark themes follow the device, and the whole site passes automated WCAG 2.1 AA checks (axe-core) on phone and desktop, in both themes. Loading skeletons keep slow connections feeling responsive. The app works in any modern browser and can be installed as a PWA.
 
 ## Stack
 

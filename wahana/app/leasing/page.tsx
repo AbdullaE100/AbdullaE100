@@ -27,7 +27,7 @@ export default function LeasingPage() {
   return (
     <div className="container-page py-6 sm:py-10">
       <p className="text-sm font-semibold text-brand-text">Tools</p>
-      <h1 className="mt-1 text-3xl font-extrabold sm:text-4xl">Leasing calculator</h1>
+      <h1 className="mt-1 text-3xl font-bold sm:text-4xl">Leasing calculator</h1>
       <p className="mb-8 mt-2 max-w-2xl text-fg-muted">Work out a monthly rental before you talk to a bank or finance company.</p>
       <div className="max-w-4xl">
         <LeasingCalculator editablePrice />

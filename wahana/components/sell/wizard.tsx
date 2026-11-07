@@ -812,7 +812,7 @@ export function SellWizard({
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
           <section aria-labelledby="step-heading" className="min-w-0 rounded-3xl border border-border bg-surface p-5 shadow-sm sm:p-8">
-            <h1 id="step-heading" ref={headingRef} tabIndex={-1} className="mb-6 text-2xl font-extrabold outline-none sm:text-[28px]">
+            <h1 id="step-heading" ref={headingRef} tabIndex={-1} className="mb-6 text-2xl font-bold outline-none sm:text-[28px]">
               {STEPS[step].heading}
             </h1>
             <div key={current} className="animate-fade-in">

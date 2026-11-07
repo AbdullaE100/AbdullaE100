@@ -25,7 +25,7 @@ export default async function DealersPage() {
 
   return (
     <div className="container-page py-6 sm:py-10">
-      <h1 className="text-2xl font-extrabold sm:text-3xl">Dealers</h1>
+      <h1 className="text-2xl font-bold sm:text-3xl">Dealers</h1>
       <p className="mt-1 text-fg-muted">Showrooms and traders selling on Wahana.</p>
       {list.length === 0 ? (
         <div className="mt-6">

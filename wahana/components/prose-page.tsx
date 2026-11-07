@@ -6,7 +6,7 @@ export function ProsePage({ eyebrow, title, intro, children, updated = true }: {
   return (
     <div className="container-page max-w-3xl py-8 sm:py-12">
       {eyebrow && <p className="text-sm font-semibold text-brand-text">{eyebrow}</p>}
-      <h1 className="mt-1 text-3xl font-extrabold sm:text-4xl">{title}</h1>
+      <h1 className="mt-1 text-3xl font-bold sm:text-4xl">{title}</h1>
       {updated && <p className="mt-2 text-sm text-fg-subtle">Last updated {site.policiesUpdated}</p>}
       {intro && <div className="mt-4 text-lg leading-relaxed text-fg-muted">{intro}</div>}
       <div className="mt-8 space-y-8 text-[15px] leading-relaxed [&_a]:font-medium [&_a]:text-brand-text [&_a]:underline [&_h2]:mb-2 [&_h2]:text-xl [&_h2]:font-bold [&_li]:ml-5 [&_li]:list-disc [&_li]:pl-1 [&_p+p]:mt-3 [&_ul]:mt-2 [&_ul]:space-y-1.5">

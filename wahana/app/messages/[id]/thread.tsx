@@ -188,7 +188,7 @@ export function Thread({ id, other, role, listing, initial }: { id: string; othe
                           <span className={cn("flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide", mine ? "text-white/90" : "text-accent-fg")}>
                             <HandCoins className="size-4" /> {mine ? "Your offer" : "Offer"}
                           </span>
-                          <span className="tabular mt-0.5 block text-xl font-extrabold">{formatLKR(o.amount)}</span>
+                          <span className="tabular mt-0.5 block text-xl font-bold">{formatLKR(o.amount)}</span>
                           {pct != null && pct !== 0 && (
                             <span className={cn("block text-xs", mine ? "text-white/90" : "text-fg-muted")}>
                               {Math.abs(pct)}% {pct > 0 ? "below" : "above"} the {formatLKR(listing!.price_lkr)} asking price
