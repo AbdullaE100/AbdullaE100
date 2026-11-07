@@ -81,7 +81,7 @@ export default function AdScreen() {
   const seller = l?.seller;
   const isDealer = seller?.account_type === "dealer";
   const sellerName = (isDealer && seller?.dealer_name) || seller?.display_name || "Private seller";
-  const target = l ? { listingId: l.id, title: l.title, price: l.price_lkr, sellerName, source: "ad_page" } : null;
+  const target = l ? { listingId: l.id, title: l.title, price: l.price_lkr, sellerName, source: "ad_page", isDemo: l.is_demo } : null;
 
   useEffect(() => {
     if (!l) return;
@@ -229,6 +229,7 @@ export default function AdScreen() {
                 Urgent sale
               </Badge>
             )}
+            {l.is_demo && <Badge tone="neutral">Sample ad</Badge>}
           </View>
 
           <Text variant="h2" style={styles.title}>

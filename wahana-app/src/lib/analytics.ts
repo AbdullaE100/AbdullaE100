@@ -64,6 +64,11 @@ export function track(event: FunnelEvent, props: Record<string, unknown> = {}) {
   const payload = { event, props: { ...props, platform: Platform.OS }, at: Date.now() };
   listeners.forEach((l) => l(payload));
   if (__DEV__) console.log(`[track] ${event}`, props);
+  // Expose the stream on web so automated funnel tests can read it.
+  if (Platform.OS === "web" && typeof globalThis !== "undefined") {
+    const g = globalThis as unknown as { __wahanaEvents?: unknown[] };
+    (g.__wahanaEvents ??= []).push(payload);
+  }
   if (!KEY) return;
   getDistinctId().then((anon) =>
     fetch(`${HOST}/capture/`, {

@@ -89,7 +89,9 @@ export function OptionSheet<V extends string | number>({
                   close();
                 }}
                 accessibilityRole="radio"
-                accessibilityState={{ selected }}
+                accessibilityState={{ selected, checked: selected }}
+                accessibilityLabel={(item as Option<V>).count != null ? `${item.label}, ${(item as Option<V>).count} ads` : item.label}
+                accessibilityHint={(item as Option<V>).sub}
                 style={({ pressed }) => [styles.row, { backgroundColor: pressed ? c.surface2 : "transparent" }]}
               >
                 <View style={styles.rowText}>

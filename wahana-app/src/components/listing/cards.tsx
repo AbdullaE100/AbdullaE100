@@ -82,7 +82,7 @@ export const ResultCard = memo(function ResultCard({ l, source, priority, note, 
   const c = useColors();
   const contact = useContact();
   const seller = l.is_dealer ? l.dealer_name ?? "Dealer" : "Private seller";
-  const target = { listingId: l.id, title: l.title, price: l.price_lkr, sellerName: seller, source };
+  const target = { listingId: l.id, title: l.title, price: l.price_lkr, sellerName: seller, source, isDemo: l.is_demo };
   return (
     <View style={[styles.result, { backgroundColor: c.surface, borderColor: l.is_top ? c.accent : c.border }]}>
       <Pressable
@@ -122,6 +122,7 @@ export const ResultCard = memo(function ResultCard({ l, source, priority, note, 
           <View style={styles.meta}>
             <Text variant="caption" tone="subtle">
               {timeAgo(l.bumped_at)}
+              {l.is_demo ? " · Sample ad" : ""}
             </Text>
             {l.is_dealer && (
               <View style={styles.dealer}>
@@ -136,23 +137,23 @@ export const ResultCard = memo(function ResultCard({ l, source, priority, note, 
       </Pressable>
       {!hideContact && (
         <View style={[styles.actions, { borderTopColor: c.border }]}>
-          <ActionButton label="Call" icon={<Phone size={17} color={c.brandSoftFg} />} onPress={() => contact.call(target, "call")} />
-          <ActionButton label="WhatsApp" icon={<WhatsAppIcon size={17} color={c.brandSoftFg} />} onPress={() => contact.call(target, "whatsapp")} />
-          <ActionButton label="Chat" icon={<MessageCircle size={17} color={c.brandSoftFg} />} onPress={() => contact.chat(target)} />
+          <ActionButton label="Call" flex={1} icon={<Phone size={17} color={c.brandSoftFg} />} onPress={() => contact.call(target, "call")} />
+          <ActionButton label="WhatsApp" flex={1.35} icon={<WhatsAppIcon size={17} color={c.brandSoftFg} />} onPress={() => contact.call(target, "whatsapp")} />
+          <ActionButton label="Chat" flex={1} icon={<MessageCircle size={17} color={c.brandSoftFg} />} onPress={() => contact.chat(target)} />
         </View>
       )}
     </View>
   );
 });
 
-function ActionButton({ label, icon, onPress }: { label: string; icon: ReactNode; onPress: () => void }) {
+function ActionButton({ label, icon, onPress, flex }: { label: string; icon: ReactNode; onPress: () => void; flex: number }) {
   const c = useColors();
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={({ pressed }) => [styles.action, { backgroundColor: pressed ? c.surface3 : c.brandSoft }]}
+      style={({ pressed }) => [styles.action, { flex, backgroundColor: pressed ? c.surface3 : c.brandSoft }]}
     >
       {icon}
       <Text variant="small" weight="700" style={{ color: c.brandSoftFg }}>
@@ -207,5 +208,5 @@ const styles = StyleSheet.create({
   meta: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 2 },
   dealer: { flexDirection: "row", alignItems: "center", gap: 3, flexShrink: 1 },
   actions: { flexDirection: "row", gap: 8, paddingHorizontal: 12, paddingBottom: 12, paddingTop: 0 },
-  action: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, minHeight: 44, borderRadius: radius.lg },
+  action: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, minHeight: 44, borderRadius: radius.lg, paddingHorizontal: 6 },
 });

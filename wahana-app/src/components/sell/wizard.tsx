@@ -286,7 +286,7 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
     district_slug: "",
     city: city?.name ?? null,
     cover_photo: null,
-    cover_thumb: d.photos[0]?.localUri ?? d.photos[0]?.thumb_path ?? null,
+    cover_thumb: d.photos[0]?.thumb_path ?? d.photos[0]?.localUri ?? null,
     photo_count: d.photos.length,
     price_rating: predicted,
     market_median_lkr: null,
@@ -499,6 +499,22 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
               {sp.peer_count} live ads of the same model, condition and year (±1). Typical range {formatLKRCompact(sp.p25 ?? sp.min)} – {formatLKRCompact(sp.p75 ?? sp.max)}, median{" "}
               {formatLKRCompact(sp.median)}.
             </Text>
+            {!!med && price > 0 && price < med * 0.7 && (
+              <View style={[styles.notice, { backgroundColor: c.highSoft }]}>
+                <Info size={18} color={c.high} />
+                <Text variant="small" style={[styles.flex, { color: c.high }]}>
+                  That's {Math.round((1 - price / med) * 100)}% below similar ads. Check for a missing digit; prices far below the market can put buyers off.
+                </Text>
+              </View>
+            )}
+            {!!med && price > med * 1.5 && (
+              <View style={[styles.notice, { backgroundColor: c.highSoft }]}>
+                <Info size={18} color={c.high} />
+                <Text variant="small" style={[styles.flex, { color: c.high }]}>
+                  That's {Math.round((price / med - 1) * 100)}% above similar ads. Double-check the price; buyers filter by fair prices.
+                </Text>
+              </View>
+            )}
             {predicted && (
               <View style={styles.predict}>
                 {predicted === "good" ? <TrendingDown size={18} color={c.good} /> : predicted === "high" ? <TrendingUp size={18} color={c.high} /> : <Minus size={18} color={c.fgMuted} />}

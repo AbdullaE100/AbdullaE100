@@ -1,6 +1,6 @@
 import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
-import { Check, Copy, MessageCircle, Phone, ShieldAlert } from "lucide-react-native";
+import { Check, Copy, Info, MessageCircle, Phone, ShieldAlert } from "lucide-react-native";
 import { createContext, use, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { displayLkPhone, formatLakhs } from "@shared/format";
@@ -13,13 +13,14 @@ import { Text } from "@/components/ui/text";
 import { useToast } from "@/components/ui/toast";
 import { track } from "@/lib/analytics";
 import { pendingAction } from "@/lib/pending";
+import { searchStore } from "@/lib/search-store";
 import { supabase } from "@/lib/supabase";
 import { radius, useColors } from "@/lib/theme";
 import { useInbox } from "./inbox";
 import { useSession } from "./session";
 
-export type ContactTarget = { listingId: number; title: string; price?: number; sellerName: string; source: string };
-type Contact = { phone: string; whatsapp: string | null; seller_name: string | null } | "none" | null;
+export type ContactTarget = { listingId: number; title: string; price?: number; sellerName: string; source: string; isDemo?: boolean };
+type Contact = { phone: string; whatsapp: string | null; seller_name: string | null } | "none" | "demo" | null;
 
 type Ctx = {
   /** Show the seller's number with Call / WhatsApp. */
@@ -45,13 +46,17 @@ export function ContactProvider({ children }: { children: ReactNode }) {
   const [chatTarget, setChatTarget] = useState<ContactTarget | null>(null);
 
   const call = useCallback((t: ContactTarget, focus: "call" | "whatsapp" = "call") => {
-    track("contact_opened", { listing_id: t.listingId, method: focus, source: t.source });
+    track("contact_opened", { listing_id: t.listingId, method: focus, source: t.source, demo: !!t.isDemo });
     setCallTarget({ ...t, focus });
   }, []);
 
   const chat = useCallback(
     (t: ContactTarget) => {
-      track("contact_opened", { listing_id: t.listingId, method: "chat", source: t.source, signed_in: !!userId });
+      track("contact_opened", { listing_id: t.listingId, method: "chat", source: t.source, signed_in: !!userId, demo: !!t.isDemo });
+      if (t.isDemo) {
+        setCallTarget({ ...t, focus: "call" });
+        return;
+      }
       if (!userId) {
         pendingAction.set({ kind: "chat", ...t });
         router.push({ pathname: "/signin", params: { reason: "chat" } });
@@ -93,9 +98,11 @@ function CallSheet({ target, onClose, onChat }: { target: (ContactTarget & { foc
   const [copied, setCopied] = useState(false);
   const id = target?.listingId;
 
+  const isDemo = !!target?.isDemo;
   useEffect(() => {
     if (!id) return;
     setCopied(false);
+    if (isDemo) return setContact("demo");
     const hit = revealed.get(id);
     if (hit) return setContact(hit);
     setContact(null);
@@ -116,13 +123,13 @@ function CallSheet({ target, onClose, onChat }: { target: (ContactTarget & { foc
     return () => {
       alive = false;
     };
-  }, [id, toast, onClose]);
+  }, [id, isDemo, toast, onClose]);
 
-  const ct = contact && contact !== "none" ? contact : null;
+  const ct = contact && contact !== "none" && contact !== "demo" ? contact : null;
   const focus = target?.focus ?? "call";
 
   return (
-    <Sheet open={!!target} onClose={onClose} title={focus === "whatsapp" ? "WhatsApp the seller" : "Call the seller"}>
+    <Sheet open={!!target} onClose={onClose} title={isDemo ? "Sample ad" : focus === "whatsapp" ? "WhatsApp the seller" : "Call the seller"}>
       <View style={styles.pad}>
         {!!target && (
           <Text variant="small" tone="muted" numberOfLines={1}>
@@ -195,6 +202,26 @@ function CallSheet({ target, onClose, onChat }: { target: (ContactTarget & { foc
                 Never pay an advance before you've seen the vehicle and its papers.
               </Text>
             </View>
+          </>
+        ) : contact === "demo" ? (
+          <>
+            <View style={[styles.warn, { backgroundColor: c.surface2 }]}>
+              <Info size={18} color={c.fgMuted} />
+              <Text variant="body" tone="muted" style={styles.flex}>
+                This is a sample ad that shows how listings look, so there's no seller to contact. Real ads show the seller's number and chat here.
+              </Text>
+            </View>
+            <Button
+              title="See ads from real sellers"
+              size="lg"
+              onPress={() => {
+                onClose();
+                setTimeout(() => {
+                  searchStore.set({});
+                  router.navigate("/search");
+                }, 250);
+              }}
+            />
           </>
         ) : (
           <>

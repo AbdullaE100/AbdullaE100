@@ -14,8 +14,8 @@ export type ToastInput = {
   duration?: number;
 };
 
-type Ctx = { toast: (t: ToastInput) => void };
-const ToastContext = createContext<Ctx>({ toast: () => {} });
+type Ctx = { toast: (t: ToastInput) => void; dismiss: () => void };
+const ToastContext = createContext<Ctx>({ toast: () => {}, dismiss: () => {} });
 export const useToast = () => use(ToastContext);
 
 type Item = ToastInput & { id: number };
@@ -28,7 +28,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setItem({ ...t, id: seq.current });
     AccessibilityInfo.announceForAccessibility([t.title, t.body].filter(Boolean).join(". "));
   }, []);
-  const value = useMemo(() => ({ toast }), [toast]);
+  const dismiss = useCallback(() => setItem(null), []);
+  const value = useMemo(() => ({ toast, dismiss }), [toast, dismiss]);
   return (
     <ToastContext value={value}>
       {children}

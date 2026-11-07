@@ -7,6 +7,7 @@ import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
+import { useToast } from "@/components/ui/toast";
 import { track } from "@/lib/analytics";
 import { SITE_URL } from "@/lib/env";
 import { pendingAction } from "@/lib/pending";
@@ -52,7 +53,11 @@ export default function SignInScreen() {
   const passRef = useRef<ComponentRef<typeof TextInput>>(null);
   const why = reason ? REASONS[reason] : undefined;
 
-  useEffect(() => track("signin_viewed", { reason: reason ?? null }), [reason]);
+  const { dismiss } = useToast();
+  useEffect(() => {
+    dismiss();
+    track("signin_viewed", { reason: reason ?? null });
+  }, [reason, dismiss]);
 
   const done = () => {
     if (router.canGoBack()) router.back();
