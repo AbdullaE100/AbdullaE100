@@ -71,7 +71,8 @@ export default function SignInScreen() {
     setError(null);
     const fe: typeof fieldErr = {};
     if (!EMAIL.test(email.trim())) fe.email = "Enter your email address, e.g. name@gmail.com.";
-    if ((mode === "signin" || mode === "signup") && password.length < (mode === "signup" ? 8 : 1)) fe.password = mode === "signup" ? "Use at least 8 characters." : "Enter your password.";
+    if ((mode === "signin" || mode === "signup") && password.length < (mode === "signup" ? 8 : 1))
+      fe.password = mode === "signup" ? "Use at least 8 characters." : "Enter your password.";
     setFieldErr(fe);
     if (Object.keys(fe).length) return;
     setBusy(true);
@@ -207,7 +208,16 @@ export default function SignInScreen() {
 
             <View style={styles.form}>
               {mode === "signup" && (
-                <Input label="Your name" value={name} onChangeText={setName} autoComplete="name" textContentType="name" placeholder="Shown to buyers and sellers" maxLength={60} returnKeyType="next" />
+                <Input
+                  label="Your name"
+                  value={name}
+                  onChangeText={setName}
+                  autoComplete="name"
+                  textContentType="name"
+                  placeholder="Shown to buyers and sellers"
+                  maxLength={60}
+                  returnKeyType="next"
+                />
               )}
               <Input
                 label="Email"
@@ -281,7 +291,7 @@ export default function SignInScreen() {
               )}
               {mode === "signup" && (
                 <Text variant="small" tone="subtle" style={styles.center}>
-                  By creating an account you agree to Wahana's terms and privacy policy.
+                  By creating an account you agree to Wahana’s terms and privacy policy.
                 </Text>
               )}
             </View>

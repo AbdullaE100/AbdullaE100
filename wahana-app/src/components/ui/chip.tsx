@@ -10,10 +10,7 @@ export function Chip({ label, selected, count, onPress, check }: { label: string
       accessibilityRole="button"
       accessibilityState={{ selected: !!selected }}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.base,
-        { borderColor: selected ? c.brand : c.border, backgroundColor: selected ? c.brandSoft : pressed ? c.surface2 : c.surface },
-      ]}
+      style={({ pressed }) => [styles.base, { borderColor: selected ? c.brand : c.border, backgroundColor: selected ? c.brandSoft : pressed ? c.surface2 : c.surface }]}
     >
       {selected && check && <Check size={14} color={c.brandSoftFg} strokeWidth={3} />}
       <Text variant="small" weight="700" style={{ color: selected ? c.brandSoftFg : c.fg }}>

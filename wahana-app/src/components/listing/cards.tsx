@@ -21,7 +21,15 @@ const place = (l: Pick<Card, "city" | "district">) => (l.city ? `${l.city}, ${l.
 function Cover({ l, height, priority }: { l: Card; height: number; priority?: boolean }) {
   const src = photoUrl(l.cover_thumb ?? l.cover_photo);
   return src ? (
-    <Image source={{ uri: src }} style={{ width: "100%", height }} contentFit="cover" transition={180} recyclingKey={String(l.id)} priority={priority ? "high" : "normal"} accessibilityIgnoresInvertColors />
+    <Image
+      source={{ uri: src }}
+      style={{ width: "100%", height }}
+      contentFit="cover"
+      transition={180}
+      recyclingKey={String(l.id)}
+      priority={priority ? "high" : "normal"}
+      accessibilityIgnoresInvertColors
+    />
   ) : (
     <VehiclePlaceholder type={l.vehicle_type} seed={l.id} style={{ width: "100%", height }} artWidth={height * 0.9} />
   );
@@ -40,7 +48,19 @@ function PhotoCount({ n }: { n: number }) {
 }
 
 /** Compact card for horizontal rails. */
-export const ListingCard = memo(function ListingCard({ l, width, source, style, note }: { l: Card; width: number; source: string; style?: StyleProp<ViewStyle>; note?: ReactNode }) {
+export const ListingCard = memo(function ListingCard({
+  l,
+  width,
+  source,
+  style,
+  note,
+}: {
+  l: Card;
+  width: number;
+  source: string;
+  style?: StyleProp<ViewStyle>;
+  note?: ReactNode;
+}) {
   const c = useColors();
   const photoH = Math.round(width * 0.72);
   return (
@@ -78,10 +98,22 @@ export const ListingCard = memo(function ListingCard({ l, width, source, style, 
 });
 
 /** Full-width search result with photo, details and contact buttons. */
-export const ResultCard = memo(function ResultCard({ l, source, priority, note, hideContact }: { l: Card; source: string; priority?: boolean; note?: ReactNode; hideContact?: boolean }) {
+export const ResultCard = memo(function ResultCard({
+  l,
+  source,
+  priority,
+  note,
+  hideContact,
+}: {
+  l: Card;
+  source: string;
+  priority?: boolean;
+  note?: ReactNode;
+  hideContact?: boolean;
+}) {
   const c = useColors();
   const contact = useContact();
-  const seller = l.is_dealer ? l.dealer_name ?? "Dealer" : "Private seller";
+  const seller = l.is_dealer ? (l.dealer_name ?? "Dealer") : "Private seller";
   const target = { listingId: l.id, title: l.title, price: l.price_lkr, sellerName: seller, source, isDemo: l.is_demo };
   return (
     <View style={[styles.result, { backgroundColor: c.surface, borderColor: l.is_top ? c.accent : c.border }]}>
@@ -197,7 +229,18 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.92 },
   photo: { width: "100%", overflow: "hidden" },
   fav: { position: "absolute", right: 8, top: 8 },
-  count: { position: "absolute", left: 10, bottom: 8, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(0,0,0,0.6)", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
+  count: {
+    position: "absolute",
+    left: 10,
+    bottom: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
   cardBody: { padding: 12, gap: 5 },
   minBadge: { minHeight: 22, justifyContent: "center" },
   loc: { flexDirection: "row", alignItems: "center", gap: 4 },

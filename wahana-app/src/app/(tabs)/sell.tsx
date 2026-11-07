@@ -110,7 +110,11 @@ export default function SellTab() {
                 style={({ pressed }) => [styles.ad, { borderColor: c.border, backgroundColor: pressed ? c.surface2 : c.surface }]}
               >
                 <View style={[styles.thumb, { backgroundColor: c.surface2 }]}>
-                  {a.cover_thumb ? <Image source={{ uri: photoUrl(a.cover_thumb)! }} style={StyleSheet.absoluteFill} contentFit="cover" /> : <VehicleArt type={a.vehicle_type} width={56} />}
+                  {a.cover_thumb ? (
+                    <Image source={{ uri: photoUrl(a.cover_thumb)! }} style={StyleSheet.absoluteFill} contentFit="cover" />
+                  ) : (
+                    <VehicleArt type={a.vehicle_type} width={56} />
+                  )}
                 </View>
                 <View style={styles.flex}>
                   <Text variant="body" weight="700" numberOfLines={1}>

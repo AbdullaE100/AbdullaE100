@@ -8,7 +8,21 @@ import { radius, useColors } from "@/lib/theme";
 import { DealBadge, dealText } from "./bits";
 
 /** Where this price sits among similar live ads. Band = middle half, tick = median. */
-export function PriceCheck({ spread, price, rating, median, peers, subject }: { spread: PriceSpread | null | undefined; price: number; rating: string | null; median: number | null; peers: number | null; subject: string }) {
+export function PriceCheck({
+  spread,
+  price,
+  rating,
+  median,
+  peers,
+  subject,
+}: {
+  spread: PriceSpread | null | undefined;
+  price: number;
+  rating: string | null;
+  median: number | null;
+  peers: number | null;
+  subject: string;
+}) {
   const c = useColors();
   const [w, setW] = useState(0);
 

@@ -34,13 +34,7 @@ export function Input({ label, hint, error, prefix, suffix, left, right, optiona
           )}
         </Text>
       )}
-      <View
-        style={[
-          styles.field,
-          { borderColor: border, backgroundColor: c.surface, borderWidth: focused || error ? 1.5 : 1 },
-          multiline && styles.multiline,
-        ]}
-      >
+      <View style={[styles.field, { borderColor: border, backgroundColor: c.surface, borderWidth: focused || error ? 1.5 : 1 }, multiline && styles.multiline]}>
         {left}
         {!!prefix && (
           <Text variant="bodyLg" tone="muted" style={styles.affix}>

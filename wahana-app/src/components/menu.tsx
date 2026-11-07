@@ -18,7 +18,23 @@ export function MenuGroup({ title, children }: { title?: string; children: React
   );
 }
 
-export function MenuItem({ icon, label, sub, value, onPress, danger, first }: { icon: ReactNode; label: string; sub?: string; value?: string | number; onPress: () => void; danger?: boolean; first?: boolean }) {
+export function MenuItem({
+  icon,
+  label,
+  sub,
+  value,
+  onPress,
+  danger,
+  first,
+}: {
+  icon: ReactNode;
+  label: string;
+  sub?: string;
+  value?: string | number;
+  onPress: () => void;
+  danger?: boolean;
+  first?: boolean;
+}) {
   const c = useColors();
   return (
     <Pressable

@@ -22,7 +22,10 @@ function Wheel({ cx, cy, r, p }: { cx: number; cy: number; r: number; p: Paint }
 const shapes: Record<string, (p: Paint) => ReactNode> = {
   car: (p) => (
     <>
-      <Path d="M8 41v-6.5c0-3 1.8-4.6 4.6-5.1L30 26.2 41.6 16.6c1.7-1.4 3.8-2.1 6-2.1h27.2c2.6 0 5 1.1 6.7 3l8.8 9.4 16.6 2.2c3.3.5 5.6 3 5.6 6.4v5.5c0 1.3-1 2.3-2.3 2.3H10.3C9 43.3 8 42.3 8 41Z" fill={p.fg} />
+      <Path
+        d="M8 41v-6.5c0-3 1.8-4.6 4.6-5.1L30 26.2 41.6 16.6c1.7-1.4 3.8-2.1 6-2.1h27.2c2.6 0 5 1.1 6.7 3l8.8 9.4 16.6 2.2c3.3.5 5.6 3 5.6 6.4v5.5c0 1.3-1 2.3-2.3 2.3H10.3C9 43.3 8 42.3 8 41Z"
+        fill={p.fg}
+      />
       <Path d="M45.5 19.2 38.7 26h20.4v-6.8H45.5Zm17.8 0V26h23.4l-6.2-6.8H63.3Z" fill={p.bg} opacity={0.8} />
       <Wheel cx={31} cy={43} r={9} p={p} />
       <Wheel cx={92} cy={43} r={9} p={p} />
@@ -30,7 +33,10 @@ const shapes: Record<string, (p: Paint) => ReactNode> = {
   ),
   suv: (p) => (
     <>
-      <Path d="M7 42V30c0-2.6 1.7-4.3 4.3-4.8l12.4-1.9 7.6-11.7c1-1.6 2.8-2.6 4.7-2.6h56.8c2 0 3.8 1.1 4.8 2.8l6.3 11.6 5.2 1c2.6.5 4.4 2.6 4.4 5.2V42c0 1.1-.9 2-2 2H9c-1.1 0-2-.9-2-2Z" fill={p.fg} />
+      <Path
+        d="M7 42V30c0-2.6 1.7-4.3 4.3-4.8l12.4-1.9 7.6-11.7c1-1.6 2.8-2.6 4.7-2.6h56.8c2 0 3.8 1.1 4.8 2.8l6.3 11.6 5.2 1c2.6.5 4.4 2.6 4.4 5.2V42c0 1.1-.9 2-2 2H9c-1.1 0-2-.9-2-2Z"
+        fill={p.fg}
+      />
       <Path d="M36.3 13.6 30.6 23h27.2v-9.4H36.3Zm25.5 0V23h22v-9.4h-22Zm26 0V23h12.3l-4.5-9.4h-7.8Z" fill={p.bg} opacity={0.8} />
       <Wheel cx={30} cy={43} r={10} p={p} />
       <Wheel cx={93} cy={43} r={10} p={p} />
@@ -46,7 +52,10 @@ const shapes: Record<string, (p: Paint) => ReactNode> = {
   ),
   pickup: (p) => (
     <>
-      <Path d="M6 42V28.5c0-.8.7-1.5 1.5-1.5H53l4.3-14.3c.6-1.9 2.4-3.2 4.4-3.2h24.6c2.4 0 4.6 1.3 5.8 3.4l7 12.1 9.6 1.7c2.8.5 4.8 2.9 4.8 5.7V42c0 1.1-.9 2-2 2H8c-1.1 0-2-.9-2-2Z" fill={p.fg} />
+      <Path
+        d="M6 42V28.5c0-.8.7-1.5 1.5-1.5H53l4.3-14.3c.6-1.9 2.4-3.2 4.4-3.2h24.6c2.4 0 4.6 1.3 5.8 3.4l7 12.1 9.6 1.7c2.8.5 4.8 2.9 4.8 5.7V42c0 1.1-.9 2-2 2H8c-1.1 0-2-.9-2-2Z"
+        fill={p.fg}
+      />
       <Path d="M61.6 13.6 58.7 25h15.6V13.6H61.6Zm16.6 0V25h18.4l-6.6-11.4H78.2Z" fill={p.bg} opacity={0.8} />
       <Wheel cx={27} cy={43} r={9.5} p={p} />
       <Wheel cx={95} cy={43} r={9.5} p={p} />
@@ -122,11 +131,29 @@ const TINTS = ["#4f7cff", "#1aa39a", "#d69a3a", "#c4577a", "#7a6cf0", "#4b8fc9",
 function mix(a: string, b: string, t: number) {
   const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
   const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
-  return `#${pa.map((v, i) => Math.round(v * (1 - t) + pb[i] * t).toString(16).padStart(2, "0")).join("")}`;
+  return `#${pa
+    .map((v, i) =>
+      Math.round(v * (1 - t) + pb[i] * t)
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
 }
 
 /** Shown in place of a cover photo. */
-export function VehiclePlaceholder({ type, seed = 0, label, style, artWidth = 140 }: { type: string; seed?: number; label?: string; style?: StyleProp<ViewStyle>; artWidth?: number }) {
+export function VehiclePlaceholder({
+  type,
+  seed = 0,
+  label,
+  style,
+  artWidth = 140,
+}: {
+  type: string;
+  seed?: number;
+  label?: string;
+  style?: StyleProp<ViewStyle>;
+  artWidth?: number;
+}) {
   const c = useColors();
   const tint = TINTS[Math.abs(seed) % TINTS.length];
   const bg = mix(c.surface2, tint, c.dark ? 0.16 : 0.12);

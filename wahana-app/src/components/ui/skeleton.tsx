@@ -1,11 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { AccessibilityInfo, Animated, Platform, type DimensionValue, type StyleProp, type ViewStyle } from "react-native";
 import { radius, useColors } from "@/lib/theme";
 
 /** Shimmer-free pulse; respects Reduce Motion. */
 export function Skeleton({ w = "100%", h = 16, r = radius.md, style }: { w?: DimensionValue; h?: DimensionValue; r?: number; style?: StyleProp<ViewStyle> }) {
   const c = useColors();
-  const pulse = useRef(new Animated.Value(0.55)).current;
+  const [pulse] = useState(() => new Animated.Value(0.55));
   useEffect(() => {
     let loop: Animated.CompositeAnimation | null = null;
     let cancelled = false;

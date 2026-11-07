@@ -72,7 +72,15 @@ export function useEditDraft(userId: string | null, id: number) {
         whatsapp: wa && wa !== phone ? wa : "",
         whatsapp_mode: !wa ? "none" : wa === phone ? "same" : "other",
         seller_name: contact?.seller_name ?? "",
-        photos: photos.map((p) => ({ key: p.id, id: p.id, status: "done" as const, path: p.path, thumb_path: p.thumb_path ?? undefined, width: p.width ?? undefined, height: p.height ?? undefined })),
+        photos: photos.map((p) => ({
+          key: p.id,
+          id: p.id,
+          status: "done" as const,
+          path: p.path,
+          thumb_path: p.thumb_path ?? undefined,
+          width: p.width ?? undefined,
+          height: p.height ?? undefined,
+        })),
         folder: `ad-${l.id}`,
       };
       return { draft, status: l.status };

@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Redirect, router } from "expo-router";
+import { Redirect } from "expo-router";
 import { Bookmark, ChevronRight, Trash2 } from "lucide-react-native";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { formatDate, formatNumber } from "@shared/format";
@@ -31,7 +31,7 @@ export default function SearchesScreen() {
         ListHeaderComponent={
           (q.data?.length ?? 0) > 0 ? (
             <Text tone="muted" style={styles.head}>
-              See what's new since you last looked.
+              See what’s new since you last looked.
             </Text>
           ) : undefined
         }
@@ -62,7 +62,11 @@ function Row({ s }: { s: SavedSearch }) {
 
   const open = () => {
     const parsed = parseSavedQuery(s.query);
-    supabase.from("saved_searches").update({ last_checked_at: new Date().toISOString() }).eq("id", s.id).then(() => qc.invalidateQueries({ queryKey: ["saved-searches"] }));
+    supabase
+      .from("saved_searches")
+      .update({ last_checked_at: new Date().toISOString() })
+      .eq("id", s.id)
+      .then(() => qc.invalidateQueries({ queryKey: ["saved-searches"] }));
     if (!parsed) return;
     if (parsed.dealerSlug) return openWeb(s.query);
     openSearch(parsed.filters);
@@ -98,7 +102,13 @@ function Row({ s }: { s: SavedSearch }) {
         )}
         <ChevronRight size={18} color={c.fgSubtle} />
       </Pressable>
-      <Pressable onPress={remove} accessibilityRole="button" accessibilityLabel={`Delete ${s.label}`} hitSlop={6} style={({ pressed }) => [styles.del, pressed && { backgroundColor: c.dangerSoft }]}>
+      <Pressable
+        onPress={remove}
+        accessibilityRole="button"
+        accessibilityLabel={`Delete ${s.label}`}
+        hitSlop={6}
+        style={({ pressed }) => [styles.del, pressed && { backgroundColor: c.dangerSoft }]}
+      >
         <Trash2 size={18} color={c.fgSubtle} />
       </Pressable>
     </View>
@@ -107,7 +117,7 @@ function Row({ s }: { s: SavedSearch }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  list: { padding: 16, paddingBottom: 40, flexGrow: 1 },
+  list: { padding: 16, paddingBottom: 40, flexGrow: 1, width: "100%", maxWidth: 760, alignSelf: "center" },
   head: { marginBottom: 12 },
   card: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderRadius: radius.xl, paddingLeft: 12 },
   main: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12 },

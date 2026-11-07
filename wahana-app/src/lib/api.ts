@@ -129,8 +129,8 @@ export function resolveNames(f: Filters, cat: Catalog | undefined, cities?: City
   const make = f.make ? cat.makes.find((m) => m.slug === f.make) : undefined;
   const model =
     f.model && make
-      ? cat.models.find((m) => m.slug === f.model && m.make_id === make.id && (!f.type || m.vehicle_type === f.type)) ??
-        cat.models.find((m) => m.slug === f.model && m.make_id === make.id)
+      ? (cat.models.find((m) => m.slug === f.model && m.make_id === make.id && (!f.type || m.vehicle_type === f.type)) ??
+        cat.models.find((m) => m.slug === f.model && m.make_id === make.id))
       : undefined;
   const district = f.district ? cat.districts.find((d) => d.slug === f.district) : undefined;
   const city = f.city ? cities?.find((c) => c.slug === f.city) : undefined;
@@ -282,7 +282,6 @@ export type ConversationSummary = {
   mineLast: boolean;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function shapeConversation(c: any, me: string): ConversationSummary {
   const role = c.buyer_id === me ? "buyer" : "seller";
   const lastRead = role === "buyer" ? c.buyer_last_read_at : c.seller_last_read_at;

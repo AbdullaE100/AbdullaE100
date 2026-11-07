@@ -13,7 +13,14 @@ function TabButton({ label, Icon, badge, isFocused, ref, ...props }: TabButtonPr
   const c = useColors();
   const color = isFocused ? c.brandText : c.fgSubtle;
   return (
-    <Pressable {...props} ref={ref} accessibilityRole="tab" accessibilityState={{ selected: !!isFocused }} accessibilityLabel={badge ? `${label}, ${badge} unread` : label} style={styles.tab}>
+    <Pressable
+      {...props}
+      ref={ref}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: !!isFocused }}
+      accessibilityLabel={badge ? `${label}, ${badge} unread` : label}
+      style={styles.tab}
+    >
       <View style={[styles.pill, isFocused && { backgroundColor: c.brandSoft }]}>
         <Icon size={22} color={color} strokeWidth={isFocused ? 2.4 : 2} />
         {!!badge && (
@@ -66,6 +73,17 @@ const styles = StyleSheet.create({
   bar: { flexDirection: "row", borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 6 },
   tab: { flex: 1, alignItems: "center", gap: 2, minHeight: 52 },
   pill: { width: 56, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center" },
-  badge: { position: "absolute", top: -4, right: 8, minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4, alignItems: "center", justifyContent: "center", borderWidth: 2 },
+  badge: {
+    position: "absolute",
+    top: -4,
+    right: 8,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+  },
   badgeText: { fontSize: 10, lineHeight: 12 },
 });

@@ -52,7 +52,12 @@ export default function SearchScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paramKey]);
 
-  useEffect(() => setText(f.q ?? ""), [f.q]);
+  // Keep the box in step when the query changes elsewhere (chips, deep links).
+  const [shownQ, setShownQ] = useState(f.q);
+  if (shownQ !== f.q) {
+    setShownQ(f.q);
+    setText(f.q ?? "");
+  }
 
   const pages = q.data?.pages;
   const total = pages?.[0]?.total ?? 0;
@@ -121,7 +126,7 @@ export default function SearchScreen() {
 
   // Finish "Save search" started before signing in, once saved searches have loaded.
   useEffect(() => {
-    if (userId && saved.data && pendingAction.take("save_search")) save();
+    if (userId && saved.data && pendingAction.take("save_search")) void Promise.resolve().then(save);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, !!saved.data]);
 
@@ -258,7 +263,11 @@ export default function SearchScreen() {
                 <ResultCardSkeleton />
               </View>
             ) : (
-              <EmptyState icon={<SearchX size={30} color={c.brandSoftFg} />} title="No ads match all of that" body="Try removing a filter or widening the price range. Save the search to check back later.">
+              <EmptyState
+                icon={<SearchX size={30} color={c.brandSoftFg} />}
+                title="No ads match all of that"
+                body="Try removing a filter or widening the price range. Save the search to check back later."
+              >
                 <Button title="Clear all filters" onPress={() => searchStore.set({})} />
                 <Button title={savedRow ? "Saved" : "Save this search"} variant="secondary" onPress={save} />
               </EmptyState>
@@ -269,7 +278,7 @@ export default function SearchScreen() {
               <ActivityIndicator style={styles.footer} color={c.brand} />
             ) : rows.length > 0 && !q.hasNextPage ? (
               <Text variant="small" tone="subtle" style={styles.end}>
-                You've seen all {formatNumber(total)} {total === 1 ? "ad" : "ads"}.
+                You’ve seen all {formatNumber(total)} {total === 1 ? "ad" : "ads"}.
               </Text>
             ) : undefined
           }
@@ -299,7 +308,7 @@ const styles = StyleSheet.create({
   recent: { flexDirection: "row", flexWrap: "wrap", gap: 8, paddingHorizontal: 16, paddingTop: 10 },
   recentChip: { borderRadius: 999, paddingHorizontal: 12, minHeight: 34, justifyContent: "center" },
   toolbarWrap: { marginTop: 2 },
-  list: { padding: 16, paddingBottom: 40, flexGrow: 1 },
+  list: { padding: 16, paddingBottom: 40, flexGrow: 1, width: "100%", maxWidth: 760, alignSelf: "center" },
   listHead: { marginBottom: 14, gap: 6 },
   countRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   flex: { flex: 1 },
@@ -307,5 +316,15 @@ const styles = StyleSheet.create({
   topHead: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: -4 },
   footer: { paddingVertical: 24 },
   end: { textAlign: "center", paddingVertical: 24 },
-  updating: { position: "absolute", alignSelf: "center", bottom: 16, flexDirection: "row", gap: 8, alignItems: "center", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
+  updating: {
+    position: "absolute",
+    alignSelf: "center",
+    bottom: 16,
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
 });

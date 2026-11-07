@@ -40,6 +40,14 @@ export function displayName(p: Profile | null, email: string | null) {
   return (p?.account_type === "dealer" && p.dealer_name) || p?.display_name || email?.split("@")[0] || "You";
 }
 
+async function loadProfile(userId: string) {
+  const [{ data: p }, { data: staff }] = await Promise.all([
+    supabase.from("profiles").select("id, display_name, account_type, dealer_name, dealer_slug, district_id, city_id").eq("id", userId).maybeSingle(),
+    supabase.rpc("is_staff"),
+  ]);
+  return { profile: (p as Profile | null) ?? null, staff: staff === true };
+}
+
 export function SessionProvider({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
   const [auth, setAuth] = useState<AuthSession | null>(null);
@@ -61,33 +69,34 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshProfile = useCallback(async () => {
-    if (!userId) {
-      setProfile(null);
-      setIsStaff(false);
-      return;
-    }
-    const [{ data: p }, { data: staff }] = await Promise.all([
-      supabase.from("profiles").select("id, display_name, account_type, dealer_name, dealer_slug, district_id, city_id").eq("id", userId).maybeSingle(),
-      supabase.rpc("is_staff"),
-    ]);
-    setProfile((p as Profile | null) ?? null);
-    setIsStaff(staff === true);
+    if (!userId) return;
+    const r = await loadProfile(userId);
+    setProfile(r.profile);
+    setIsStaff(r.staff);
   }, [userId]);
 
   useEffect(() => {
     identify(userId);
-    refreshProfile();
     // Anything cached for the previous user (inbox, my ads) is now wrong.
     qc.removeQueries({ predicate: (q) => ["conversations", "conversation", "my-ads", "saved-searches"].includes(String(q.queryKey[0])) });
-  }, [userId, refreshProfile, qc]);
+    if (!userId) return;
+    let alive = true;
+    loadProfile(userId).then((r) => {
+      if (!alive) return;
+      setProfile(r.profile);
+      setIsStaff(r.staff);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [userId, qc]);
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
-    setProfile(null);
   }, []);
 
   const value = useMemo<Ctx>(
-    () => ({ ready, userId, email: auth?.user.email ?? null, profile, isStaff, refreshProfile, signOut }),
+    () => ({ ready, userId, email: auth?.user.email ?? null, profile: userId && profile?.id === userId ? profile : null, isStaff: !!userId && isStaff, refreshProfile, signOut }),
     [ready, userId, auth?.user.email, profile, isStaff, refreshProfile, signOut],
   );
   return <SessionContext value={value}>{children}</SessionContext>;

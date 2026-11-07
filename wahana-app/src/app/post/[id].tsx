@@ -29,7 +29,11 @@ export default function EditScreen() {
         <EmptyState
           icon={<FileX size={30} color={c.brandSoftFg} />}
           title="This ad can't be edited"
-          body={!q.data ? "It isn't one of your ads, or it no longer exists." : `It was ${q.data.status === "removed" ? "removed" : "taken down by a moderator"}. You can post a new ad instead.`}
+          body={
+            !q.data
+              ? "It isn't one of your ads, or it no longer exists."
+              : `It was ${q.data.status === "removed" ? "removed" : "taken down by a moderator"}. You can post a new ad instead.`
+          }
         >
           <Button title="Post a new ad" onPress={() => router.replace("/post")} />
           <Button title="Go back" variant="ghost" onPress={() => router.back()} />

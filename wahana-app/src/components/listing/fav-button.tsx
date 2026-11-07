@@ -4,7 +4,19 @@ import { Platform, Pressable, StyleSheet, type StyleProp, type ViewStyle } from 
 import { useFavourites } from "@/providers/favourites";
 import { cardShadow, useColors } from "@/lib/theme";
 
-export function FavButton({ id, source, style, variant = "float", size = 40 }: { id: number; source: string; style?: StyleProp<ViewStyle>; variant?: "float" | "plain"; size?: number }) {
+export function FavButton({
+  id,
+  source,
+  style,
+  variant = "float",
+  size = 40,
+}: {
+  id: number;
+  source: string;
+  style?: StyleProp<ViewStyle>;
+  variant?: "float" | "plain";
+  size?: number;
+}) {
   const c = useColors();
   const { has, toggle } = useFavourites();
   const on = has(id);

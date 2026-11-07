@@ -61,7 +61,13 @@ export default function LeasingScreen() {
           Down payment
         </Text>
         <View style={styles.stepper}>
-          <Pressable onPress={() => step(-5)} disabled={downPct <= 10} accessibilityRole="button" accessibilityLabel="Decrease down payment" style={[styles.stepBtn, { borderColor: c.borderStrong }, downPct <= 10 && styles.off]}>
+          <Pressable
+            onPress={() => step(-5)}
+            disabled={downPct <= 10}
+            accessibilityRole="button"
+            accessibilityLabel="Decrease down payment"
+            style={[styles.stepBtn, { borderColor: c.borderStrong }, downPct <= 10 && styles.off]}
+          >
             <Minus size={20} color={c.fg} />
           </Pressable>
           <View
@@ -83,7 +89,13 @@ export default function LeasingScreen() {
               {formatLKR(down)}
             </Text>
           </View>
-          <Pressable onPress={() => step(5)} disabled={downPct >= 90} accessibilityRole="button" accessibilityLabel="Increase down payment" style={[styles.stepBtn, { borderColor: c.borderStrong }, downPct >= 90 && styles.off]}>
+          <Pressable
+            onPress={() => step(5)}
+            disabled={downPct >= 90}
+            accessibilityRole="button"
+            accessibilityLabel="Increase down payment"
+            style={[styles.stepBtn, { borderColor: c.borderStrong }, downPct >= 90 && styles.off]}
+          >
             <Plus size={20} color={c.fg} />
           </Pressable>
         </View>

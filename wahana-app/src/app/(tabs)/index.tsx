@@ -82,6 +82,10 @@ export default function HomeScreen() {
             <Text variant="body" tone="muted">
               {formatNumber(s.total)} cars, bikes and three-wheelers, each with a fair-price rating.
             </Text>
+          ) : summary.isError ? (
+            <Text variant="body" tone="muted">
+              Cars, bikes and three-wheelers from sellers across Sri Lanka.
+            </Text>
           ) : (
             <Skeleton w="80%" h={16} />
           )}
@@ -98,7 +102,12 @@ export default function HomeScreen() {
               accessibilityLabel="Search vehicles"
               style={[styles.searchInput, { color: c.fg }]}
             />
-            <Pressable onPress={submit} accessibilityRole="button" accessibilityLabel="Search" style={({ pressed }) => [styles.searchGo, { backgroundColor: pressed ? c.brandPressed : c.brand }]}>
+            <Pressable
+              onPress={submit}
+              accessibilityRole="button"
+              accessibilityLabel="Search"
+              style={({ pressed }) => [styles.searchGo, { backgroundColor: pressed ? c.brandPressed : c.brand }]}
+            >
               <Text weight="700" tone="inverse">
                 Search
               </Text>
@@ -131,7 +140,7 @@ export default function HomeScreen() {
             <WifiOff size={20} color={c.high} />
             <View style={styles.flex}>
               <Text variant="body" weight="700">
-                Can't reach Wahana
+                Can’t reach Wahana
               </Text>
               <Text variant="small" tone="muted">
                 Check your internet connection. Saved and recently viewed ads still work.
@@ -148,15 +157,17 @@ export default function HomeScreen() {
           </View>
         )}
 
-        <View style={styles.section}>
-          <SectionHeader
-            title="Good deals"
-            sub="At least 5% below similar ads of the same model, condition and year."
-            action={s?.good_deals ? `All ${formatNumber(s.good_deals)}` : "See all"}
-            onAction={() => openSearch({ deal: "good" })}
-          />
-          <Rail items={deals.data} loading={deals.isLoading} source="home_deals" />
-        </View>
+        {!deals.isError && (
+          <View style={styles.section}>
+            <SectionHeader
+              title="Good deals"
+              sub="At least 5% below similar ads of the same model, condition and year."
+              action={s?.good_deals ? `All ${formatNumber(s.good_deals)}` : "See all"}
+              onAction={() => openSearch({ deal: "good" })}
+            />
+            <Rail items={deals.data} loading={deals.isLoading} source="home_deals" />
+          </View>
+        )}
 
         {makes.length > 0 && (
           <View style={styles.section}>
@@ -190,7 +201,11 @@ export default function HomeScreen() {
                   key={`${m.make_slug}/${m.model_slug}`}
                   onPress={() => openSearch({ type: typeBySlug(m.type)?.slug, make: m.make_slug, model: m.model_slug })}
                   accessibilityRole="button"
-                  style={({ pressed }) => [styles.listRow, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border }, pressed && { backgroundColor: c.surface2 }]}
+                  style={({ pressed }) => [
+                    styles.listRow,
+                    i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border },
+                    pressed && { backgroundColor: c.surface2 },
+                  ]}
                 >
                   <Text variant="bodyLg" weight="600" style={styles.flex} numberOfLines={1}>
                     {m.make} {m.model}
@@ -205,10 +220,12 @@ export default function HomeScreen() {
           </View>
         )}
 
-        <View style={styles.section}>
-          <SectionHeader title="Recently added" sub="The newest ads from private sellers and dealers." action="See all" onAction={() => openSearch({})} />
-          <Rail items={latest.data} loading={latest.isLoading} source="home_latest" />
-        </View>
+        {!latest.isError && (
+          <View style={styles.section}>
+            <SectionHeader title="Recently added" sub="The newest ads from private sellers and dealers." action="See all" onAction={() => openSearch({})} />
+            <Rail items={latest.data} loading={latest.isLoading} source="home_latest" />
+          </View>
+        )}
 
         {districts.length > 0 && (
           <View style={styles.section}>
@@ -234,9 +251,19 @@ export default function HomeScreen() {
         )}
 
         <View style={[styles.section, styles.tools]}>
-          <Tool icon={<Gauge size={22} color={c.brandSoftFg} />} title="What's my vehicle worth?" body="See what similar vehicles are listed for." onPress={() => router.push("/value")} />
+          <Tool
+            icon={<Gauge size={22} color={c.brandSoftFg} />}
+            title="What's my vehicle worth?"
+            body="See what similar vehicles are listed for."
+            onPress={() => router.push("/value")}
+          />
           <Tool icon={<Calculator size={22} color={c.brandSoftFg} />} title="Leasing calculator" body="Work out a monthly rental." onPress={() => router.push("/leasing")} />
-          <Tool icon={<Store size={22} color={c.brandSoftFg} />} title="Dealer stock" body="Only ads from registered dealers." onPress={() => openSearch({ seller_type: "dealer" })} />
+          <Tool
+            icon={<Store size={22} color={c.brandSoftFg} />}
+            title="Dealer stock"
+            body="Only ads from registered dealers."
+            onPress={() => openSearch({ seller_type: "dealer" })}
+          />
         </View>
 
         <View style={[styles.sell, { backgroundColor: c.brand }]}>
@@ -244,7 +271,7 @@ export default function HomeScreen() {
             Selling your vehicle?
           </Text>
           <Text variant="body" tone="inverse">
-            Post your ad free in a few minutes. We'll show you what similar vehicles are listed for before you set a price.
+            Post your ad free in a few minutes. We’ll show you what similar vehicles are listed for before you set a price.
           </Text>
           <Button title="Post an ad free" variant="secondary" size="lg" onPress={() => router.navigate("/sell")} style={styles.sellBtn} />
         </View>
@@ -256,11 +283,7 @@ export default function HomeScreen() {
 function Tool({ icon, title, body, onPress }: { icon: React.ReactNode; title: string; body: string; onPress: () => void }) {
   const c = useColors();
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      style={({ pressed }) => [styles.tool, { borderColor: c.border, backgroundColor: pressed ? c.surface2 : c.surface }]}
-    >
+    <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => [styles.tool, { borderColor: c.border, backgroundColor: pressed ? c.surface2 : c.surface }]}>
       <View style={[styles.toolIcon, { backgroundColor: c.brandSoft }]}>{icon}</View>
       <View style={styles.flex}>
         <Text variant="body" weight="700">
@@ -277,7 +300,7 @@ function Tool({ icon, title, body, onPress }: { icon: React.ReactNode; title: st
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  content: { paddingBottom: 32 },
+  content: { paddingBottom: 32, width: "100%", maxWidth: 1000, alignSelf: "center" },
   topbar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingLeft: 16, paddingRight: 8, height: 52 },
   hero: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 20, gap: 8 },
   heroTitle: { letterSpacing: -0.4 },
@@ -286,7 +309,7 @@ const styles = StyleSheet.create({
   searchGo: { height: 44, paddingHorizontal: 16, borderRadius: radius.lg, alignItems: "center", justifyContent: "center" },
   types: { gap: 10, paddingTop: 12, paddingHorizontal: 16 },
   bleed: { marginHorizontal: -16 },
-  typeTile: { width: 96, borderRadius: radius.xl, paddingVertical: 10, paddingHorizontal: 6, alignItems: "center", gap: 2 },
+  typeTile: { minWidth: 96, borderRadius: radius.xl, paddingVertical: 10, paddingHorizontal: 10, alignItems: "center", gap: 2 },
   section: { marginTop: 28 },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 10, paddingHorizontal: 16 },
   makeTile: { width: "31%", flexGrow: 1, borderWidth: 1, borderRadius: radius.xl, paddingVertical: 12, paddingHorizontal: 12, gap: 2 },

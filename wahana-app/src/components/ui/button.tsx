@@ -67,7 +67,13 @@ export function Button({
       }}
       style={({ pressed }) => [
         styles.base,
-        { height: H[size], paddingHorizontal: size === "sm" ? 12 : 16, backgroundColor: pressed ? p.pressed : p.bg, borderColor: p.border, borderRadius: size === "sm" ? radius.md : radius.lg },
+        {
+          height: H[size],
+          paddingHorizontal: size === "sm" ? 12 : 16,
+          backgroundColor: pressed ? p.pressed : p.bg,
+          borderColor: p.border,
+          borderRadius: size === "sm" ? radius.md : radius.lg,
+        },
         full && styles.full,
         compact && styles.compact,
         off && styles.off,

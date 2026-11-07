@@ -38,7 +38,11 @@ export function persisted<T>(key: string, initial: T, validate: (v: unknown) => 
       return useSyncExternalStore(this.subscribe, this.get, this.get);
     },
     useLoaded(): boolean {
-      return useSyncExternalStore(this.subscribe, () => loaded, () => loaded);
+      return useSyncExternalStore(
+        this.subscribe,
+        () => loaded,
+        () => loaded,
+      );
     },
   };
 }

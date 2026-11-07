@@ -132,10 +132,15 @@ export function PhotoGrid({ userId, folder, photos, onChange }: { userId: string
                   </View>
                 )}
                 {p.status === "error" && (
-                  <Pressable onPress={() => run(p.key)} accessibilityRole="button" accessibilityLabel="Retry upload" style={[StyleSheet.absoluteFill, styles.overlay, { backgroundColor: "rgba(120,0,0,0.55)" }]}>
-                    {sources.current.has(p.key) ? <RotateCcw size={22} color="#fff" /> : <AlertCircle size={22} color="#fff" />}
+                  <Pressable
+                    onPress={() => run(p.key)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Retry upload"
+                    style={[StyleSheet.absoluteFill, styles.overlay, { backgroundColor: "rgba(120,0,0,0.55)" }]}
+                  >
+                    {p.localUri ? <RotateCcw size={22} color="#fff" /> : <AlertCircle size={22} color="#fff" />}
                     <Text variant="caption" weight="700" tone="inverse">
-                      {sources.current.has(p.key) ? "Tap to retry" : "Failed"}
+                      {p.localUri ? "Tap to retry" : "Failed"}
                     </Text>
                   </Pressable>
                 )}
@@ -153,7 +158,12 @@ export function PhotoGrid({ userId, folder, photos, onChange }: { userId: string
                   <View style={styles.tools}>
                     <SmallBtn label={`Move photo ${i + 1} earlier`} disabled={i === 0} onPress={() => move(p.key, -1)} icon={<ChevronLeft size={16} color="#fff" />} />
                     {i !== 0 && <SmallBtn label={`Make photo ${i + 1} the cover`} onPress={() => makeCover(p.key)} icon={<Star size={14} color="#fff" />} />}
-                    <SmallBtn label={`Move photo ${i + 1} later`} disabled={i === photos.length - 1} onPress={() => move(p.key, 1)} icon={<ChevronRight size={16} color="#fff" />} />
+                    <SmallBtn
+                      label={`Move photo ${i + 1} later`}
+                      disabled={i === photos.length - 1}
+                      onPress={() => move(p.key, 1)}
+                      icon={<ChevronRight size={16} color="#fff" />}
+                    />
                   </View>
                 )}
               </View>

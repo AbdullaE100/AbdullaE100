@@ -50,9 +50,12 @@ export default function ThreadScreen() {
     latest.current = msgs;
   }, [msgs]);
 
-  useEffect(() => {
-    if (conv) setMsgs(conv.messages);
-  }, [conv]);
+  // Seed from the first load of each conversation; realtime keeps it current after that.
+  const [seeded, setSeeded] = useState<string | null>(null);
+  if (conv && seeded !== conv.id) {
+    setSeeded(conv.id);
+    setMsgs(conv.messages);
+  }
 
   const markRead = useCallback(() => {
     supabase.rpc("mark_conversation_read", { p_conversation_id: id }).then(() => {
@@ -112,7 +115,11 @@ export default function ThreadScreen() {
     setMsgs((all) => (retryId ? all.map((m) => (m.id === retryId ? optimistic : m)) : [...all, optimistic]));
     if (!retryId) setBody("");
     const isOffer = !!parseOffer(clean);
-    const { data, error } = await supabase.from("messages").insert({ conversation_id: id, sender_id: me, body: clean.slice(0, 2000) }).select("id, sender_id, body, created_at").single();
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({ conversation_id: id, sender_id: me, body: clean.slice(0, 2000) })
+      .select("id, sender_id, body, created_at")
+      .single();
     setMsgs((all) => {
       if (error || !data) return all.map((m) => (m.id === tid ? { ...m, pending: false, failed: true } : m));
       if (all.some((m) => m.id === data.id)) return all.filter((m) => m.id !== tid);
@@ -223,7 +230,9 @@ export default function ThreadScreen() {
             </Text>
           </View>
         }
-        renderItem={({ item }) => (item.kind === "day" ? <DaySep label={item.label} /> : <Bubble m={item.m} mine={item.mine} tail={item.tail} onRetry={() => send(item.m.body, item.m.id)} />)}
+        renderItem={({ item }) =>
+          item.kind === "day" ? <DaySep label={item.label} /> : <Bubble m={item.m} mine={item.mine} tail={item.tail} onRetry={() => send(item.m.body, item.m.id)} />
+        }
       />
 
       {offerOpen && (
@@ -257,7 +266,9 @@ export default function ThreadScreen() {
           </View>
           {offerAmount > 0 && (
             <Text variant="small" tone="muted">
-              {[formatLakhs(offerAmount), offerPct != null && offerPct !== 0 ? `${Math.abs(offerPct)}% ${offerPct > 0 ? "below" : "above"} the asking price` : null].filter(Boolean).join(" · ")}
+              {[formatLakhs(offerAmount), offerPct != null && offerPct !== 0 ? `${Math.abs(offerPct)}% ${offerPct > 0 ? "below" : "above"} the asking price` : null]
+                .filter(Boolean)
+                .join(" · ")}
               {body.trim() ? " · your message is sent with it" : ""}
             </Text>
           )}
@@ -266,7 +277,12 @@ export default function ThreadScreen() {
 
       <View style={[styles.composer, { backgroundColor: c.surface, borderTopColor: c.border, paddingBottom: Math.max(insets.bottom, 8) }]}>
         {conv.role === "buyer" && live && !offerOpen && (
-          <Pressable onPress={() => setOfferOpen(true)} accessibilityRole="button" accessibilityLabel="Make an offer" style={({ pressed }) => [styles.roundBtn, { backgroundColor: pressed ? c.surface3 : c.accentSoft }]}>
+          <Pressable
+            onPress={() => setOfferOpen(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Make an offer"
+            style={({ pressed }) => [styles.roundBtn, { backgroundColor: pressed ? c.surface3 : c.accentSoft }]}
+          >
             <HandCoins size={20} color={c.accentFg} />
           </Pressable>
         )}
@@ -387,6 +403,17 @@ const styles = StyleSheet.create({
   offerField: { flex: 1, flexDirection: "row", alignItems: "center", gap: 6, borderWidth: 1, borderRadius: radius.lg, paddingHorizontal: 12, minHeight: 44 },
   offerInput: { flex: 1, minWidth: 0, ...typeScale.bodyLg, paddingVertical: 8, outlineStyle: "none" } as object,
   composer: { flexDirection: "row", alignItems: "flex-end", gap: 8, paddingHorizontal: 10, paddingTop: 8, borderTopWidth: StyleSheet.hairlineWidth },
-  input: { flex: 1, minWidth: 0, ...typeScale.bodyLg, minHeight: 44, maxHeight: 140, borderRadius: 22, paddingHorizontal: 16, paddingTop: 11, paddingBottom: 11, outlineStyle: "none" } as object,
+  input: {
+    flex: 1,
+    minWidth: 0,
+    ...typeScale.bodyLg,
+    minHeight: 44,
+    maxHeight: 140,
+    borderRadius: 22,
+    paddingHorizontal: 16,
+    paddingTop: 11,
+    paddingBottom: 11,
+    outlineStyle: "none",
+  } as object,
   roundBtn: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
 });

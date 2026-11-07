@@ -184,7 +184,17 @@ export function SelectField<V extends string | number>({
 }
 
 const styles = StyleSheet.create({
-  search: { flexDirection: "row", alignItems: "center", gap: 8, marginHorizontal: 16, marginTop: 12, marginBottom: 4, paddingHorizontal: 12, borderRadius: radius.lg, minHeight: 44 },
+  search: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 4,
+    paddingHorizontal: 12,
+    borderRadius: radius.lg,
+    minHeight: 44,
+  },
   searchInput: { flex: 1, minWidth: 0, ...typeScale.bodyLg, paddingVertical: 10, outlineStyle: "none" } as object,
   list: { paddingVertical: 6 },
   row: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 52, paddingHorizontal: 20, paddingVertical: 8 },

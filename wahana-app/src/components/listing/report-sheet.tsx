@@ -27,9 +27,14 @@ export function ReportSheet({ open, onClose, listingId, userId, onDone }: { open
   };
 
   return (
-    <Sheet open={open} onClose={onClose} title="Report this ad" footer={<Button title="Send report" variant="danger" size="lg" style={styles.flex} disabled={!reason} loading={busy} onPress={submit} />}>
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title="Report this ad"
+      footer={<Button title="Send report" variant="danger" size="lg" style={styles.flex} disabled={!reason} loading={busy} onPress={submit} />}
+    >
       <ScrollView contentContainerStyle={styles.pad} keyboardShouldPersistTaps="handled">
-        <Text tone="muted">Tell us what's wrong. The seller won't see who reported it.</Text>
+        <Text tone="muted">Tell us what’s wrong. The seller won’t see who reported it.</Text>
         <View role="radiogroup" style={styles.list}>
           {REPORT_REASONS.map((r) => {
             const on = reason === r.value;
@@ -41,7 +46,9 @@ export function ReportSheet({ open, onClose, listingId, userId, onDone }: { open
                 accessibilityState={{ checked: on }}
                 style={[styles.option, { borderColor: on ? c.danger : c.border, backgroundColor: on ? c.dangerSoft : c.surface }]}
               >
-                <View style={[styles.radio, { borderColor: on ? c.danger : c.borderStrong, backgroundColor: on ? c.danger : "transparent" }]}>{on && <Check size={12} color="#fff" strokeWidth={3} />}</View>
+                <View style={[styles.radio, { borderColor: on ? c.danger : c.borderStrong, backgroundColor: on ? c.danger : "transparent" }]}>
+                  {on && <Check size={12} color="#fff" strokeWidth={3} />}
+                </View>
                 <Text variant="bodyLg" weight="600">
                   {r.label}
                 </Text>
@@ -49,7 +56,16 @@ export function ReportSheet({ open, onClose, listingId, userId, onDone }: { open
             );
           })}
         </View>
-        <Input label="Details" optional value={details} onChangeText={setDetails} multiline maxLength={1000} placeholder="Anything that helps us check, e.g. the seller asked for an advance payment." error={err} />
+        <Input
+          label="Details"
+          optional
+          value={details}
+          onChangeText={setDetails}
+          multiline
+          maxLength={1000}
+          placeholder="Anything that helps us check, e.g. the seller asked for an advance payment."
+          error={err}
+        />
       </ScrollView>
     </Sheet>
   );

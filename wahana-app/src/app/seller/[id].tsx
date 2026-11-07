@@ -31,11 +31,17 @@ export default function SellerScreen() {
         renderItem={({ item, index }) => <ResultCard l={item} source="seller" priority={index < 2} />}
         onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
         onEndReachedThreshold={0.6}
-        ListEmptyComponent={q.isLoading ? <ResultCardSkeleton /> : <EmptyState icon={<Store size={30} color={c.brandSoftFg} />} title="No live ads" body="This seller has nothing for sale right now." />}
+        ListEmptyComponent={
+          q.isLoading ? (
+            <ResultCardSkeleton />
+          ) : (
+            <EmptyState icon={<Store size={30} color={c.brandSoftFg} />} title="No live ads" body="This seller has nothing for sale right now." />
+          )
+        }
         ListFooterComponent={q.isFetchingNextPage ? <ActivityIndicator color={c.brand} style={{ padding: 20 }} /> : undefined}
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({ root: { flex: 1 }, list: { padding: 16, paddingBottom: 40 }, head: { marginBottom: 12 } });
+const styles = StyleSheet.create({ root: { flex: 1 }, list: { padding: 16, paddingBottom: 40, width: "100%", maxWidth: 760, alignSelf: "center" }, head: { marginBottom: 12 } });

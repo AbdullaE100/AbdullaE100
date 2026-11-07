@@ -57,7 +57,7 @@ export function SearchToolbar({ f, names }: { f: Filters; names: Names }) {
           icon={<SlidersHorizontal size={16} color={n ? c.brandSoftFg : c.fg} />}
           onPress={() => router.push({ pathname: "/filters", params: filtersToParams(f) })}
         />
-        <ToolChip label={f.type ? VEHICLE_TYPES.find((t) => t.slug === f.type)?.short ?? "Type" : "Type"} active={!!f.type} caret onPress={() => setPicker("type")} />
+        <ToolChip label={f.type ? (VEHICLE_TYPES.find((t) => t.slug === f.type)?.short ?? "Type") : "Type"} active={!!f.type} caret onPress={() => setPicker("type")} />
         <ToolChip label={names.make ?? "Make"} active={!!f.make} caret onPress={() => setPicker("make")} />
         {!!f.make && <ToolChip label={names.model ?? "Model"} active={!!f.model} caret onPress={() => setPicker("model")} />}
         <ToolChip
@@ -72,7 +72,15 @@ export function SearchToolbar({ f, names }: { f: Filters; names: Names }) {
         ))}
       </ScrollView>
 
-      <OptionSheet title="Vehicle type" open={picker === "type"} onClose={() => setPicker(null)} options={typeOptions} value={f.type} anyLabel="All vehicles" onChange={(v) => applyFilter(f, { type: v ?? undefined }, "quick_type")} />
+      <OptionSheet
+        title="Vehicle type"
+        open={picker === "type"}
+        onClose={() => setPicker(null)}
+        options={typeOptions}
+        value={f.type}
+        anyLabel="All vehicles"
+        onChange={(v) => applyFilter(f, { type: v ?? undefined }, "quick_type")}
+      />
       <OptionSheet
         title="Make"
         open={picker === "make"}
@@ -107,7 +115,21 @@ export function SearchToolbar({ f, names }: { f: Filters; names: Names }) {
   );
 }
 
-function ToolChip({ label: text, active, caret, removable, icon, onPress }: { label: string; active?: boolean; caret?: boolean; removable?: boolean; icon?: React.ReactNode; onPress: () => void }) {
+function ToolChip({
+  label: text,
+  active,
+  caret,
+  removable,
+  icon,
+  onPress,
+}: {
+  label: string;
+  active?: boolean;
+  caret?: boolean;
+  removable?: boolean;
+  icon?: React.ReactNode;
+  onPress: () => void;
+}) {
   const c = useColors();
   const fg = active ? c.brandSoftFg : c.fg;
   return (

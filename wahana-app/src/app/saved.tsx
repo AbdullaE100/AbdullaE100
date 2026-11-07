@@ -24,7 +24,10 @@ export default function SavedScreen() {
   const gone = cards.data ? ids.filter((id) => !cards.data!.some((x) => x.id === id)) : [];
 
   // Price when each ad was saved = the old price of the first change after saving.
-  const since = items.map((i) => savedAt[i.id]).filter(Boolean).sort()[0];
+  const since = items
+    .map((i) => savedAt[i.id])
+    .filter(Boolean)
+    .sort()[0];
   const drops = useQuery({
     queryKey: ["saved-drops", items.map((i) => i.id).join(","), since],
     enabled: !!userId && !!since && items.length > 0,
@@ -32,7 +35,10 @@ export default function SavedScreen() {
       const { data } = await supabase
         .from("listing_price_changes")
         .select("listing_id, old_price_lkr, changed_at")
-        .in("listing_id", items.map((i) => i.id))
+        .in(
+          "listing_id",
+          items.map((i) => i.id),
+        )
         .gte("changed_at", since!)
         .order("changed_at");
       const first = new Map<number, number>();
@@ -46,7 +52,9 @@ export default function SavedScreen() {
       <View style={[styles.root, { backgroundColor: c.bg }]}>
         <EmptyState icon={<Heart size={30} color={c.brandSoftFg} />} title="No saved ads yet" body="Tap the heart on any ad to keep it here and see if the price drops.">
           <Button title="Browse vehicles" onPress={() => openSearch({})} />
-          {!userId && <Button title="Sign in to see ads saved on other devices" variant="ghost" onPress={() => router.push({ pathname: "/signin", params: { reason: "saved" } })} />}
+          {!userId && (
+            <Button title="Sign in to see ads saved on other devices" variant="ghost" onPress={() => router.push({ pathname: "/signin", params: { reason: "saved" } })} />
+          )}
         </EmptyState>
       </View>
     );
@@ -66,7 +74,11 @@ export default function SavedScreen() {
               {userId ? "" : " on this phone"}
             </Text>
             {!userId && (
-              <Pressable onPress={() => router.push({ pathname: "/signin", params: { reason: "saved" } })} accessibilityRole="button" style={[styles.note, { backgroundColor: c.brandSoft }]}>
+              <Pressable
+                onPress={() => router.push({ pathname: "/signin", params: { reason: "saved" } })}
+                accessibilityRole="button"
+                style={[styles.note, { backgroundColor: c.brandSoft }]}
+              >
                 <Text variant="small" weight="600" style={{ color: c.brandSoftFg }}>
                   Sign in to keep these on all your devices and get price-drop notes.
                 </Text>
@@ -120,7 +132,7 @@ export default function SavedScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  list: { padding: 16, paddingBottom: 40 },
+  list: { padding: 16, paddingBottom: 40, width: "100%", maxWidth: 760, alignSelf: "center" },
   head: { gap: 10, marginBottom: 14 },
   note: { padding: 12, borderRadius: radius.lg },
   row: { flexDirection: "row", alignItems: "center", gap: 4 },

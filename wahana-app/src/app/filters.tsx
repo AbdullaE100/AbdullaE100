@@ -53,7 +53,7 @@ export default function FiltersScreen() {
     PRICE_STEPS.filter((p) => !other || (side === "min" ? p < Number(other) : p > Number(other))).map((p) => ({ value: String(p), label: formatLKRCompact(p) }));
   const yearOptions = (other?: string, side?: "min" | "max"): Option[] =>
     YEARS.filter((y) => !other || (side === "min" ? y <= other : y >= other)).map((y) => ({ value: y, label: y }));
-  const bodies = f.type ? BODY_TYPES[f.type] ?? [] : [];
+  const bodies = f.type ? (BODY_TYPES[f.type] ?? []) : [];
   const showGearbox = !f.type || !NO_GEARBOX.includes(f.type);
 
   const apply = () => {
@@ -107,10 +107,24 @@ export default function FiltersScreen() {
         <Group title="Price">
           <View style={styles.pair}>
             <View style={styles.flex}>
-              <SelectField label="Min" value={f.price_min ?? null} options={priceOptions(f.price_max, "min")} anyLabel="No min" placeholder="No min" onChange={(v) => set({ price_min: v ?? undefined })} />
+              <SelectField
+                label="Min"
+                value={f.price_min ?? null}
+                options={priceOptions(f.price_max, "min")}
+                anyLabel="No min"
+                placeholder="No min"
+                onChange={(v) => set({ price_min: v ?? undefined })}
+              />
             </View>
             <View style={styles.flex}>
-              <SelectField label="Max" value={f.price_max ?? null} options={priceOptions(f.price_min, "max")} anyLabel="No max" placeholder="No max" onChange={(v) => set({ price_max: v ?? undefined })} />
+              <SelectField
+                label="Max"
+                value={f.price_max ?? null}
+                options={priceOptions(f.price_min, "max")}
+                anyLabel="No max"
+                placeholder="No max"
+                onChange={(v) => set({ price_max: v ?? undefined })}
+              />
             </View>
           </View>
         </Group>
@@ -118,10 +132,24 @@ export default function FiltersScreen() {
         <Group title="Year">
           <View style={styles.pair}>
             <View style={styles.flex}>
-              <SelectField label="From" value={f.year_min ?? null} options={yearOptions(f.year_max, "min")} anyLabel="Any" placeholder="Any" onChange={(v) => set({ year_min: v ?? undefined })} />
+              <SelectField
+                label="From"
+                value={f.year_min ?? null}
+                options={yearOptions(f.year_max, "min")}
+                anyLabel="Any"
+                placeholder="Any"
+                onChange={(v) => set({ year_min: v ?? undefined })}
+              />
             </View>
             <View style={styles.flex}>
-              <SelectField label="To" value={f.year_max ?? null} options={yearOptions(f.year_min, "max")} anyLabel="Any" placeholder="Any" onChange={(v) => set({ year_max: v ?? undefined })} />
+              <SelectField
+                label="To"
+                value={f.year_max ?? null}
+                options={yearOptions(f.year_min, "max")}
+                anyLabel="Any"
+                placeholder="Any"
+                onChange={(v) => set({ year_max: v ?? undefined })}
+              />
             </View>
           </View>
         </Group>

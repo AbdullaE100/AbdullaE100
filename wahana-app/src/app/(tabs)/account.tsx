@@ -1,19 +1,6 @@
 import Constants from "expo-constants";
 import { router } from "expo-router";
-import {
-  BadgeCheck,
-  Bookmark,
-  Calculator,
-  CarFront,
-  FileText,
-  Gauge,
-  Heart,
-  Info,
-  LogOut,
-  MessagesSquare,
-  ShieldCheck,
-  UserRound,
-} from "lucide-react-native";
+import { BadgeCheck, Bookmark, Calculator, CarFront, FileText, Gauge, Heart, Info, LogOut, MessagesSquare, ShieldCheck, UserRound } from "lucide-react-native";
 import { Alert, Platform, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MenuGroup, MenuItem } from "@/components/menu";
@@ -106,7 +93,12 @@ export default function AccountScreen() {
 
         <MenuGroup title="Buying">
           <MenuItem first icon={ic(Heart)} label="Saved ads" value={ids.length || ""} onPress={() => router.push("/saved")} />
-          <MenuItem icon={ic(Bookmark)} label="Saved searches" sub={userId ? undefined : "Sign in to save searches"} onPress={() => router.push(userId ? "/searches" : { pathname: "/signin", params: { next: "/searches" } })} />
+          <MenuItem
+            icon={ic(Bookmark)}
+            label="Saved searches"
+            sub={userId ? undefined : "Sign in to save searches"}
+            onPress={() => router.push(userId ? "/searches" : { pathname: "/signin", params: { next: "/searches" } })}
+          />
           <MenuItem icon={ic(Gauge)} label="Value my vehicle" onPress={() => router.push("/value")} />
           <MenuItem icon={ic(Calculator)} label="Leasing calculator" onPress={() => router.push("/leasing")} />
         </MenuGroup>

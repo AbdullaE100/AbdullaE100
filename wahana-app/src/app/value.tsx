@@ -27,8 +27,18 @@ export default function ValueScreen() {
   const [condition, setCondition] = useState("used");
   const [asked, setAsked] = useState<{ modelId: number; year: number; condition: string } | null>(null);
 
-  const makes = useMemo(() => (cat.data?.makes ?? []).filter((m) => m.vehicle_types.includes(type)).map((m) => ({ value: m.id, label: m.name, group: m.is_popular ? "Popular" : "All makes" })).sort((a, b) => (a.group === b.group ? 0 : a.group === "Popular" ? -1 : 1)), [cat.data, type]);
-  const models = useMemo(() => (cat.data?.models ?? []).filter((m) => m.make_id === makeId && m.vehicle_type === type).map((m) => ({ value: m.id, label: m.name })), [cat.data, makeId, type]);
+  const makes = useMemo(
+    () =>
+      (cat.data?.makes ?? [])
+        .filter((m) => m.vehicle_types.includes(type))
+        .map((m) => ({ value: m.id, label: m.name, group: m.is_popular ? "Popular" : "All makes" }))
+        .sort((a, b) => (a.group === b.group ? 0 : a.group === "Popular" ? -1 : 1)),
+    [cat.data, type],
+  );
+  const models = useMemo(
+    () => (cat.data?.models ?? []).filter((m) => m.make_id === makeId && m.vehicle_type === type).map((m) => ({ value: m.id, label: m.name })),
+    [cat.data, makeId, type],
+  );
   const make = cat.data?.makes.find((m) => m.id === makeId);
   const model = cat.data?.models.find((m) => m.id === asked?.modelId);
 
@@ -82,7 +92,14 @@ export default function ValueScreen() {
             setModelId(null);
           }}
         />
-        <SelectField<number> label="Model" value={modelId} options={models} disabled={!makeId} placeholder={makeId ? "Choose the model" : "Choose a make first"} onChange={setModelId} />
+        <SelectField<number>
+          label="Model"
+          value={modelId}
+          options={models}
+          disabled={!makeId}
+          placeholder={makeId ? "Choose the model" : "Choose a make first"}
+          onChange={setModelId}
+        />
         <SelectField label="Year made" value={year} options={YEARS.map((y) => ({ value: y, label: y }))} placeholder="Year" onChange={setYear} />
         <View style={styles.wrap}>
           {CONDITIONS.map((o) => (
@@ -113,7 +130,9 @@ export default function ValueScreen() {
                 {formatLKR(s.median)}
               </Text>
               <View style={[styles.track, { backgroundColor: c.surface3 }]}>
-                {s.p25 != null && s.p75 != null && <View style={[styles.band, { left: x(s.p25), width: `${((s.p75 - s.p25) / span) * 100}%`, backgroundColor: c.brandSoft, borderColor: c.brand }]} />}
+                {s.p25 != null && s.p75 != null && (
+                  <View style={[styles.band, { left: x(s.p25), width: `${((s.p75 - s.p25) / span) * 100}%`, backgroundColor: c.brandSoft, borderColor: c.brand }]} />
+                )}
                 <View style={[styles.median, { left: x(s.median), backgroundColor: c.brand }]} />
               </View>
               <View style={styles.scale}>
@@ -141,9 +160,7 @@ export default function ValueScreen() {
               </Text>
             </View>
           )}
-          {result.data.examples.length > 0 && (
-            <Button title="See these ads" variant="outline" onPress={() => openSearch(result.data!.filters)} />
-          )}
+          {result.data.examples.length > 0 && <Button title="See these ads" variant="outline" onPress={() => openSearch(result.data!.filters)} />}
         </View>
       )}
       {asked && (result.data?.examples.length ?? 0) > 0 && (

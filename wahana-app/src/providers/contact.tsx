@@ -99,13 +99,15 @@ function CallSheet({ target, onClose, onChat }: { target: (ContactTarget & { foc
   const id = target?.listingId;
 
   const isDemo = !!target?.isDemo;
-  useEffect(() => {
-    if (!id) return;
+  // Reset for each ad the sheet opens for.
+  const [forId, setForId] = useState<number | undefined>(undefined);
+  if (id !== forId) {
+    setForId(id);
     setCopied(false);
-    if (isDemo) return setContact("demo");
-    const hit = revealed.get(id);
-    if (hit) return setContact(hit);
-    setContact(null);
+    setContact(!id ? null : isDemo ? "demo" : (revealed.get(id) ?? null));
+  }
+  useEffect(() => {
+    if (!id || isDemo || revealed.has(id)) return;
     let alive = true;
     supabase.rpc("reveal_contact", { p_listing_id: id }).then(({ data, error }) => {
       if (!alive) return;
@@ -194,12 +196,12 @@ function CallSheet({ target, onClose, onChat }: { target: (ContactTarget & { foc
                 />
               )}
             </View>
-            {!ct.whatsapp && focus === "whatsapp" && <Text tone="muted">This seller hasn't added a WhatsApp number. Call or chat instead.</Text>}
+            {!ct.whatsapp && focus === "whatsapp" && <Text tone="muted">This seller hasn’t added a WhatsApp number. Call or chat instead.</Text>}
             <Button title="Message on Wahana instead" variant="ghost" icon={<MessageCircle size={18} color={c.fgMuted} />} onPress={() => target && onChat(target)} />
             <View style={[styles.warn, { backgroundColor: c.accentSoft }]}>
               <ShieldAlert size={18} color={c.accentFg} />
               <Text variant="small" style={[styles.flex, { color: c.accentFg }]}>
-                Never pay an advance before you've seen the vehicle and its papers.
+                Never pay an advance before you’ve seen the vehicle and its papers.
               </Text>
             </View>
           </>
@@ -208,7 +210,7 @@ function CallSheet({ target, onClose, onChat }: { target: (ContactTarget & { foc
             <View style={[styles.warn, { backgroundColor: c.surface2 }]}>
               <Info size={18} color={c.fgMuted} />
               <Text variant="body" tone="muted" style={styles.flex}>
-                This is a sample ad that shows how listings look, so there's no seller to contact. Real ads show the seller's number and chat here.
+                This is a sample ad that shows how listings look, so there’s no seller to contact. Real ads show the seller’s number and chat here.
               </Text>
             </View>
             <Button
@@ -225,7 +227,7 @@ function CallSheet({ target, onClose, onChat }: { target: (ContactTarget & { foc
           </>
         ) : (
           <>
-            <Text tone="muted">This seller hasn't shared a phone number. Send them a message instead; they'll get it straight away.</Text>
+            <Text tone="muted">This seller hasn’t shared a phone number. Send them a message instead; they’ll get it straight away.</Text>
             <Button title="Message the seller" size="lg" icon={<MessageCircle size={18} color="#fff" />} onPress={() => target && onChat(target)} />
           </>
         )}
@@ -245,13 +247,15 @@ function ChatSheet({ target, onClose }: { target: ContactTarget | null; onClose:
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  useEffect(() => {
+  const [forTarget, setForTarget] = useState<ContactTarget | null>(null);
+  if (target !== forTarget) {
+    setForTarget(target);
     if (target) {
       setBody(`Hi, is your ${target.title} still available?`);
       setOffer("");
       setErr(null);
     }
-  }, [target]);
+  }
 
   const offerAmount = Number(offer.replace(/\D/g, "")) || 0;
   const price = target?.price;
@@ -314,7 +318,9 @@ function ChatSheet({ target, onClose }: { target: ContactTarget | null; onClose:
           placeholder={price ? Math.round(price * 0.95).toLocaleString("en-LK") : "Your price"}
           hint={
             offerAmount > 0
-              ? [formatLakhs(offerAmount), offerPct != null && offerPct !== 0 ? `${Math.abs(offerPct)}% ${offerPct > 0 ? "below" : "above"} the asking price` : null].filter(Boolean).join(" · ")
+              ? [formatLakhs(offerAmount), offerPct != null && offerPct !== 0 ? `${Math.abs(offerPct)}% ${offerPct > 0 ? "below" : "above"} the asking price` : null]
+                  .filter(Boolean)
+                  .join(" · ")
               : "Sellers see offers highlighted in the chat."
           }
           error={err}

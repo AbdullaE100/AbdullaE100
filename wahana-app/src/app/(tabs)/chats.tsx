@@ -38,7 +38,13 @@ export default function ChatsScreen() {
       {userId && all.length > 0 && (
         <View style={[styles.seg, { backgroundColor: c.surface2 }]} role="tablist">
           {(["all", "buying", "selling"] as const).map((f) => (
-            <Pressable key={f} role="tab" accessibilityState={{ selected: filter === f }} onPress={() => setFilter(f)} style={[styles.segBtn, filter === f && { backgroundColor: c.surface }]}>
+            <Pressable
+              key={f}
+              role="tab"
+              accessibilityState={{ selected: filter === f }}
+              onPress={() => setFilter(f)}
+              style={[styles.segBtn, filter === f && { backgroundColor: c.surface }]}
+            >
               <Text variant="small" weight="700" tone={filter === f ? "default" : "muted"}>
                 {f === "all" ? (unread ? `All · ${unread} new` : "All") : f === "buying" ? "Buying" : "Selling"}
               </Text>
@@ -53,7 +59,11 @@ export default function ChatsScreen() {
     return (
       <View style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}>
         {head}
-        <EmptyState icon={<MessagesSquare size={30} color={c.brandSoftFg} />} title="Message sellers privately" body="Sign in to chat with sellers and buyers. Your phone number and email stay hidden.">
+        <EmptyState
+          icon={<MessagesSquare size={30} color={c.brandSoftFg} />}
+          title="Message sellers privately"
+          body="Sign in to chat with sellers and buyers. Your phone number and email stay hidden."
+        >
           <Button title="Sign in" size="lg" onPress={() => router.push("/signin")} />
           <Button title="Create account" variant="ghost" onPress={() => router.push({ pathname: "/signin", params: { mode: "signup" } })} />
         </EmptyState>
@@ -101,7 +111,11 @@ export default function ChatsScreen() {
             <EmptyState
               icon={<MessagesSquare size={30} color={c.brandSoftFg} />}
               title={filter === "all" ? "No chats yet" : filter === "buying" ? "No chats with sellers yet" : "No buyer messages yet"}
-              body={filter === "selling" ? "When buyers message you about your ads, you'll see them here." : "Find a vehicle you like and tap Chat to ask the seller a question or make an offer."}
+              body={
+                filter === "selling"
+                  ? "When buyers message you about your ads, you'll see them here."
+                  : "Find a vehicle you like and tap Chat to ask the seller a question or make an offer."
+              }
             >
               {filter !== "selling" && <Button title="Browse vehicles" onPress={() => openSearch({})} />}
             </EmptyState>
@@ -156,7 +170,7 @@ const styles = StyleSheet.create({
   head: { paddingHorizontal: 16, paddingBottom: 12, gap: 12 },
   seg: { flexDirection: "row", borderRadius: radius.lg, padding: 3 },
   segBtn: { flex: 1, minHeight: 36, borderRadius: radius.md, alignItems: "center", justifyContent: "center" },
-  list: { paddingBottom: 32, flexGrow: 1 },
+  list: { paddingBottom: 32, flexGrow: 1, width: "100%", maxWidth: 760, alignSelf: "center" },
   row: { flexDirection: "row", gap: 12, paddingHorizontal: 16, paddingVertical: 12, alignItems: "center" },
   thumb: { width: 64, height: 52, borderRadius: radius.md, overflow: "hidden", alignItems: "center", justifyContent: "center" },
   flex: { flex: 1 },

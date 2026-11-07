@@ -44,7 +44,19 @@ const money = (v: string) => {
 
 export type SellerDefaults = { phone: string; whatsapp: string; name: string; hasSaved: boolean };
 
-export function SellWizard({ mode, listingId, userId, initial, defaults }: { mode: "create" | "edit"; listingId?: number; userId: string | null; initial?: Draft; defaults: SellerDefaults }) {
+export function SellWizard({
+  mode,
+  listingId,
+  userId,
+  initial,
+  defaults,
+}: {
+  mode: "create" | "edit";
+  listingId?: number;
+  userId: string | null;
+  initial?: Draft;
+  defaults: SellerDefaults;
+}) {
   const c = useColors();
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
@@ -70,7 +82,7 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
   const [publishing, setPublishing] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const loaded = useRef(mode !== "create");
-  const awaitingAuth = useRef(false);
+  const [awaitingAuth, setAwaitingAuth] = useState(false);
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const started = useRef(false);
 
@@ -119,8 +131,8 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
     return () => clearTimeout(t);
   }, [d, step, mode, userId]);
 
-  const makes = cat.data?.makes ?? [];
-  const models = cat.data?.models ?? [];
+  const makes = useMemo(() => cat.data?.makes ?? [], [cat.data]);
+  const models = useMemo(() => cat.data?.models ?? [], [cat.data]);
   const district = cat.data?.districts.find((x) => x.id === d.district_id);
   const cities = useCities(d.district_id);
   const city = cities.data?.find((x) => x.id === d.city_id);
@@ -143,31 +155,38 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
     track("sell_step_completed", { step: current, index: step, mode, signed_in: !!userId });
     // Photos are stored under the seller's account, so this is where we ask them to sign in.
     if (!userId && step + 1 >= 2) {
-      awaitingAuth.current = true;
+      setAwaitingAuth(true);
       router.push({ pathname: "/signin", params: { reason: "sell_continue" } });
       return;
     }
     goto(Math.min(step + 1, STEPS.length - 1));
   };
 
-  // Back from signing in: carry the draft over to their account and continue.
-  useEffect(() => {
-    if (!userId || mode !== "create") return;
-    AsyncStorage.removeItem(draftKey("anon")).catch(() => {});
-    setD((p) => ({
-      ...p,
-      phone: p.phone || defaults.phone,
-      whatsapp: p.whatsapp || (defaults.whatsapp && defaults.whatsapp !== defaults.phone ? defaults.whatsapp : ""),
-      whatsapp_mode: p.phone ? p.whatsapp_mode : defaults.whatsapp && defaults.whatsapp !== defaults.phone ? "other" : "same",
-      seller_name: p.seller_name || defaults.name,
-    }));
-    setSaveContact(!defaults.hasSaved);
-    if (awaitingAuth.current) {
-      awaitingAuth.current = false;
-      goto(2);
+  // Back from signing in (or once their saved contact details load): fill in
+  // what we know about the seller, and carry on to photos if that's where they were.
+  const [seen, setSeen] = useState({ userId, defaults });
+  if (mode === "create" && (seen.userId !== userId || seen.defaults !== defaults)) {
+    setSeen({ userId, defaults });
+    if (userId) {
+      setD((p) => ({
+        ...p,
+        phone: p.phone || defaults.phone,
+        whatsapp: p.whatsapp || (defaults.whatsapp && defaults.whatsapp !== defaults.phone ? defaults.whatsapp : ""),
+        whatsapp_mode: p.phone ? p.whatsapp_mode : defaults.whatsapp && defaults.whatsapp !== defaults.phone ? "other" : "same",
+        seller_name: p.seller_name || defaults.name,
+      }));
+      setSaveContact(!defaults.hasSaved);
+      if (awaitingAuth) {
+        setAwaitingAuth(false);
+        setStep(2);
+        setErrors({});
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, defaults]);
+  }
+  // The draft now lives under their account.
+  useEffect(() => {
+    if (userId && mode === "create") AsyncStorage.removeItem(draftKey("anon")).catch(() => {});
+  }, [userId, mode]);
 
   const back = () => (step > 0 ? goto(step - 1) : exit());
 
@@ -175,10 +194,14 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
     const leave = () => (router.canGoBack() ? router.back() : router.replace("/sell"));
     const dirty = mode === "edit" || d.vehicle_type;
     if (!dirty || Platform.OS === "web") return leave();
-    Alert.alert(mode === "edit" ? "Discard changes?" : "Leave for now?", mode === "edit" ? "Your changes to this ad won't be saved." : "Your draft is saved on this phone. Pick up where you left off any time.", [
-      { text: "Keep editing", style: "cancel" },
-      { text: mode === "edit" ? "Discard" : "Leave", style: mode === "edit" ? "destructive" : "default", onPress: leave },
-    ]);
+    Alert.alert(
+      mode === "edit" ? "Discard changes?" : "Leave for now?",
+      mode === "edit" ? "Your changes to this ad won't be saved." : "Your draft is saved on this phone. Pick up where you left off any time.",
+      [
+        { text: "Keep editing", style: "cancel" },
+        { text: mode === "edit" ? "Discard" : "Leave", style: mode === "edit" ? "destructive" : "default", onPress: leave },
+      ],
+    );
   };
 
   const startOver = () => {
@@ -199,7 +222,6 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
       return;
     }
     if (!userId) {
-      awaitingAuth.current = false;
       router.push({ pathname: "/signin", params: { reason: "sell_continue" } });
       return;
     }
@@ -221,7 +243,11 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
         if (error) throw error;
         id = existing;
       } else {
-        const { data, error } = await supabase.from("listings").insert({ ...row, seller_id: userId }).select("id").single();
+        const { data, error } = await supabase
+          .from("listings")
+          .insert({ ...row, seller_id: userId })
+          .select("id")
+          .single();
         if (error) throw error;
         created.current = { id: data.id };
         id = data.id;
@@ -238,9 +264,18 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
       const wanted = new Map(done.map((p, i) => [p.path!, i]));
       const stale = (rows ?? []).filter((r) => !wanted.has(r.path));
       if (stale.length) {
-        const del = await supabase.from("listing_photos").delete().in("id", stale.map((r) => r.id));
+        const del = await supabase
+          .from("listing_photos")
+          .delete()
+          .in(
+            "id",
+            stale.map((r) => r.id),
+          );
         if (del.error) throw del.error;
-        supabase.storage.from("listing-photos").remove(stale.flatMap((r) => [r.path, r.thumb_path].filter(Boolean) as string[])).then(() => {});
+        supabase.storage
+          .from("listing-photos")
+          .remove(stale.flatMap((r) => [r.path, r.thumb_path].filter(Boolean) as string[]))
+          .then(() => {});
       }
       const have = new Map((rows ?? []).filter((r) => wanted.has(r.path)).map((r) => [r.path, r]));
       for (const [path, pos] of wanted) {
@@ -254,7 +289,9 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
       if (fresh.length) {
         const ins = await supabase
           .from("listing_photos")
-          .insert(fresh.map(({ ph, i }) => ({ listing_id: id, path: ph.path!, thumb_path: ph.thumb_path ?? null, width: ph.width ?? null, height: ph.height ?? null, position: i })));
+          .insert(
+            fresh.map(({ ph, i }) => ({ listing_id: id, path: ph.path!, thumb_path: ph.thumb_path ?? null, width: ph.width ?? null, height: ph.height ?? null, position: i })),
+          );
         if (ins.error) throw ins.error;
       }
 
@@ -349,7 +386,16 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
                 accessibilityLabel={t.name}
                 onPress={() => {
                   if (d.vehicle_type !== t.slug) {
-                    setD((p) => ({ ...p, vehicle_type: t.slug, make_id: null, make_other: "", model_id: null, model_other: "", body_type: null, transmission: NO_TRANSMISSION.includes(t.slug) ? null : p.transmission }));
+                    setD((p) => ({
+                      ...p,
+                      vehicle_type: t.slug,
+                      make_id: null,
+                      make_other: "",
+                      model_id: null,
+                      model_other: "",
+                      body_type: null,
+                      transmission: NO_TRANSMISSION.includes(t.slug) ? null : p.transmission,
+                    }));
                     setMakeOther(false);
                     setModelOther(false);
                     setErrors((e) => ({ ...e, vehicle_type: undefined }));
@@ -399,8 +445,18 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
           setErrors((e) => ({ ...e, model_id: undefined }));
         }}
       />
-      {(modelOther || makeOther) && <Input placeholder="Type the model" value={d.model_other} maxLength={60} onChangeText={(t) => set("model_other", t)} accessibilityLabel="Model name" />}
-      <Input label="Edition or grade" optional hint="For example G, S, X, Safety, Premium or Hybrid." value={d.trim_level} maxLength={60} onChangeText={(t) => set("trim_level", t)} placeholder="e.g. S Safety" />
+      {(modelOther || makeOther) && (
+        <Input placeholder="Type the model" value={d.model_other} maxLength={60} onChangeText={(t) => set("model_other", t)} accessibilityLabel="Model name" />
+      )}
+      <Input
+        label="Edition or grade"
+        optional
+        hint="For example G, S, X, Safety, Premium or Hybrid."
+        value={d.trim_level}
+        maxLength={60}
+        onChangeText={(t) => set("trim_level", t)}
+        placeholder="e.g. S Safety"
+      />
       <Field label="Condition" error={errors.condition}>
         <View style={styles.stack} role="radiogroup">
           {CONDITIONS.map((o) => (
@@ -410,7 +466,14 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
       </Field>
       <View style={styles.pair}>
         <View style={styles.flex}>
-          <SelectField label="Year made" value={d.year_manufactured || null} options={YEARS.map((y) => ({ value: y, label: y }))} error={errors.year_manufactured} placeholder="Year" onChange={(v) => set("year_manufactured", v ?? "")} />
+          <SelectField
+            label="Year made"
+            value={d.year_manufactured || null}
+            options={YEARS.map((y) => ({ value: y, label: y }))}
+            error={errors.year_manufactured}
+            placeholder="Year"
+            onChange={(v) => set("year_manufactured", v ?? "")}
+          />
         </View>
         <View style={styles.flex}>
           <SelectField
@@ -428,13 +491,30 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
     </>
   );
 
-  const bodies = d.vehicle_type ? BODY_TYPES[d.vehicle_type] ?? [] : [];
+  const bodies = d.vehicle_type ? (BODY_TYPES[d.vehicle_type] ?? []) : [];
   const stepDetails = (
     <>
       {d.condition !== "brand_new" && (
-        <Input label="Mileage" keyboardType="number-pad" suffix="km" value={money(d.mileage_km)} onChangeText={(t) => set("mileage_km", digits(t))} placeholder="e.g. 85,000" error={errors.mileage_km} />
+        <Input
+          label="Mileage"
+          keyboardType="number-pad"
+          suffix="km"
+          value={money(d.mileage_km)}
+          onChangeText={(t) => set("mileage_km", digits(t))}
+          placeholder="e.g. 85,000"
+          error={errors.mileage_km}
+        />
       )}
-      <Input label="Engine capacity" optional keyboardType="number-pad" suffix="cc" value={d.engine_cc} onChangeText={(t) => set("engine_cc", digits(t).slice(0, 5))} placeholder="e.g. 1500" error={errors.engine_cc} />
+      <Input
+        label="Engine capacity"
+        optional
+        keyboardType="number-pad"
+        suffix="cc"
+        value={d.engine_cc}
+        onChangeText={(t) => set("engine_cc", digits(t).slice(0, 5))}
+        placeholder="e.g. 1500"
+        error={errors.engine_cc}
+      />
       <Field label="Fuel" error={errors.fuel}>
         <View style={styles.wrap}>
           {FUELS.map((o) => (
@@ -486,7 +566,12 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
         <Field label="Previous owners" optional hint="Not counting you.">
           <View style={styles.wrap}>
             {["0", "1", "2", "3", "4"].map((n) => (
-              <Chip key={n} label={n === "0" ? "None" : n === "4" ? "4+" : n} selected={d.previous_owners === n} onPress={() => set("previous_owners", d.previous_owners === n ? "" : n)} />
+              <Chip
+                key={n}
+                label={n === "0" ? "None" : n === "4" ? "4+" : n}
+                selected={d.previous_owners === n}
+                onPress={() => set("previous_owners", d.previous_owners === n ? "" : n)}
+              />
             ))}
           </View>
         </Field>
@@ -540,7 +625,7 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
               <View style={[styles.notice, { backgroundColor: c.highSoft }]}>
                 <Info size={18} color={c.high} />
                 <Text variant="small" style={[styles.flex, { color: c.high }]}>
-                  That's {Math.round((1 - price / med) * 100)}% below similar ads. Check for a missing digit; prices far below the market can put buyers off.
+                  That’s {Math.round((1 - price / med) * 100)}% below similar ads. Check for a missing digit; prices far below the market can put buyers off.
                 </Text>
               </View>
             )}
@@ -548,19 +633,35 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
               <View style={[styles.notice, { backgroundColor: c.highSoft }]}>
                 <Info size={18} color={c.high} />
                 <Text variant="small" style={[styles.flex, { color: c.high }]}>
-                  That's {Math.round((price / med - 1) * 100)}% above similar ads. Double-check the price; buyers filter by fair prices.
+                  That’s {Math.round((price / med - 1) * 100)}% above similar ads. Double-check the price; buyers filter by fair prices.
                 </Text>
               </View>
             )}
             {predicted && (
               <View style={styles.predict}>
-                {predicted === "good" ? <TrendingDown size={18} color={c.good} /> : predicted === "high" ? <TrendingUp size={18} color={c.high} /> : <Minus size={18} color={c.fgMuted} />}
+                {predicted === "good" ? (
+                  <TrendingDown size={18} color={c.good} />
+                ) : predicted === "high" ? (
+                  <TrendingUp size={18} color={c.high} />
+                ) : (
+                  <Minus size={18} color={c.fgMuted} />
+                )}
                 <Text variant="small" weight="700" tone={predicted === "good" ? "good" : predicted === "high" ? "high" : "default"}>
-                  {predicted === "good" ? "Buyers will see a Good price tag" : predicted === "high" ? "This is above the market; expect fewer calls" : "Buyers will see a Fair price tag"}
+                  {predicted === "good"
+                    ? "Buyers will see a Good price tag"
+                    : predicted === "high"
+                      ? "This is above the market; expect fewer calls"
+                      : "Buyers will see a Fair price tag"}
                 </Text>
               </View>
             )}
-            <Button title={`Use the median, ${formatLKR(sp.median)}`} variant="soft" size="sm" onPress={() => set("price_lkr", String(Math.round(sp.median! / 1000) * 1000))} style={styles.self} />
+            <Button
+              title={`Use the median, ${formatLKR(sp.median)}`}
+              variant="soft"
+              size="sm"
+              onPress={() => set("price_lkr", String(Math.round(sp.median! / 1000) * 1000))}
+              style={styles.self}
+            />
           </View>
         ) : spread.isLoading ? null : (
           <Notice tone="info" text="Not enough similar ads are live to suggest a price yet. Check the Search tab for comparable vehicles." />
@@ -634,11 +735,21 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
 
   const summary: [string, string, number][] = [
     ["Vehicle", [title, d.condition ? label(CONDITIONS, d.condition) : null].filter(Boolean).join(" · "), 0],
-    ["Details", [d.mileage_km ? `${money(d.mileage_km)} km` : null, d.fuel ? label(FUELS, d.fuel) : null, d.transmission ? label(TRANSMISSIONS, d.transmission) : null, d.colour].filter(Boolean).join(" · ") || "—", 1],
+    [
+      "Details",
+      [d.mileage_km ? `${money(d.mileage_km)} km` : null, d.fuel ? label(FUELS, d.fuel) : null, d.transmission ? label(TRANSMISSIONS, d.transmission) : null, d.colour]
+        .filter(Boolean)
+        .join(" · ") || "—",
+      1,
+    ],
     ["Photos", d.photos.length ? `${d.photos.length} photo${d.photos.length === 1 ? "" : "s"}` : "No photos", 2],
     ["Price", [price ? formatLKR(price) : "—", d.negotiable ? "negotiable" : null].filter(Boolean).join(", "), 3],
     ["Location", [city?.name, district?.name].filter(Boolean).join(", ") || "—", 3],
-    ["Contact", [d.phone, d.whatsapp_mode === "none" ? "no WhatsApp" : d.whatsapp_mode === "other" ? `WhatsApp ${d.whatsapp}` : "same number on WhatsApp"].filter(Boolean).join(" · "), 4],
+    [
+      "Contact",
+      [d.phone, d.whatsapp_mode === "none" ? "no WhatsApp" : d.whatsapp_mode === "other" ? `WhatsApp ${d.whatsapp}` : "same number on WhatsApp"].filter(Boolean).join(" · "),
+      4,
+    ],
   ];
 
   const stepReview = (
@@ -677,7 +788,13 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
     <KeyboardAvoidingView style={[styles.root, { backgroundColor: c.bg }]} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={[styles.header, { paddingTop: insets.top + 4, backgroundColor: c.surface, borderBottomColor: c.border }]}>
         <View style={styles.headerRow}>
-          <Pressable onPress={exit} accessibilityRole="button" accessibilityLabel={mode === "edit" ? "Close without saving" : "Close and keep draft"} hitSlop={10} style={styles.headerBtn}>
+          <Pressable
+            onPress={exit}
+            accessibilityRole="button"
+            accessibilityLabel={mode === "edit" ? "Close without saving" : "Close and keep draft"}
+            hitSlop={10}
+            style={styles.headerBtn}
+          >
             <X size={24} color={c.fg} />
           </Pressable>
           <View style={styles.headerTitle}>
@@ -719,7 +836,9 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
         <Text variant="h2" accessibilityRole="header">
           {STEPS[step].heading}
         </Text>
-        {errCount > 0 && current !== "photos" && <Notice tone="danger" text={errCount === 1 ? "Fix the highlighted field to continue." : `Fix the ${errCount} highlighted fields to continue.`} />}
+        {errCount > 0 && current !== "photos" && (
+          <Notice tone="danger" text={errCount === 1 ? "Fix the highlighted field to continue." : `Fix the ${errCount} highlighted fields to continue.`} />
+        )}
         {body[current]}
         <View style={[styles.tip, { backgroundColor: c.accentSoft }]}>
           <Lightbulb size={18} color={c.accentFg} />
@@ -732,7 +851,14 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12), backgroundColor: c.surface, borderTopColor: c.border }]}>
         <Button title={step === 0 ? "Cancel" : "Back"} variant="secondary" size="lg" icon={step === 0 ? undefined : <ArrowLeft size={18} color={c.fg} />} onPress={back} />
         {current === "review" ? (
-          <Button title={mode === "edit" ? "Save changes" : "Publish ad"} size="lg" style={styles.flex} loading={publishing} icon={<Check size={18} color="#fff" />} onPress={publish} />
+          <Button
+            title={mode === "edit" ? "Save changes" : "Publish ad"}
+            size="lg"
+            style={styles.flex}
+            loading={publishing}
+            icon={<Check size={18} color="#fff" />}
+            onPress={publish}
+          />
         ) : (
           <Button title={current === "photos" && uploading ? "Uploading…" : "Continue"} size="lg" style={styles.flex} disabled={current === "photos" && uploading} onPress={next} />
         )}

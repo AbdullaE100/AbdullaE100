@@ -2,7 +2,21 @@ import type { ReactNode } from "react";
 import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 import { useColors } from "@/lib/theme";
 
-export function IconButton({ icon, label, onPress, style, tone = "plain", size = 44 }: { icon: ReactNode; label: string; onPress?: () => void; style?: StyleProp<ViewStyle>; tone?: "plain" | "overlay" | "outline"; size?: number }) {
+export function IconButton({
+  icon,
+  label,
+  onPress,
+  style,
+  tone = "plain",
+  size = 44,
+}: {
+  icon: ReactNode;
+  label: string;
+  onPress?: () => void;
+  style?: StyleProp<ViewStyle>;
+  tone?: "plain" | "overlay" | "outline";
+  size?: number;
+}) {
   const c = useColors();
   return (
     <Pressable

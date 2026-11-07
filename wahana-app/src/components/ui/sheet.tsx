@@ -1,5 +1,5 @@
 import { X } from "lucide-react-native";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Animated, Easing, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { radius, useColors } from "@/lib/theme";
@@ -30,11 +30,12 @@ export function Sheet({
   const insets = useSafeAreaInsets();
   const { height: screenH } = useWindowDimensions();
   const [mounted, setMounted] = useState(open);
-  const progress = useRef(new Animated.Value(0)).current;
+  const [progress] = useState(() => new Animated.Value(0));
 
+  // Mount as soon as it opens; unmount after the closing animation.
+  if (open && !mounted) setMounted(true);
   useEffect(() => {
     if (open) {
-      setMounted(true);
       Animated.timing(progress, { toValue: 1, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: Platform.OS !== "web" }).start();
     } else if (mounted) {
       Animated.timing(progress, { toValue: 0, duration: 200, easing: Easing.in(Easing.cubic), useNativeDriver: Platform.OS !== "web" }).start(({ finished }) => {
@@ -80,9 +81,7 @@ export function Sheet({
             </View>
           )}
           <View style={height === "tall" ? styles.bodyTall : styles.body}>{children}</View>
-          {footer && (
-            <View style={[styles.footer, { borderTopColor: c.border, paddingBottom: Math.max(insets.bottom, 12) }]}>{footer}</View>
-          )}
+          {footer && <View style={[styles.footer, { borderTopColor: c.border, paddingBottom: Math.max(insets.bottom, 12) }]}>{footer}</View>}
         </Animated.View>
       </KeyboardAvoidingView>
     </Modal>

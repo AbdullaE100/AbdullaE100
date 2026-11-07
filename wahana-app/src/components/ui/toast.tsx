@@ -41,7 +41,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 function ToastView({ item, onDone }: { item: Item; onDone: () => void }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
-  const anim = useRef(new Animated.Value(0)).current;
+  const [anim] = useState(() => new Animated.Value(0));
   const native = Platform.OS !== "web";
 
   const hide = useCallback(() => {
@@ -60,10 +60,7 @@ function ToastView({ item, onDone }: { item: Item; onDone: () => void }) {
   return (
     <Animated.View
       pointerEvents="box-none"
-      style={[
-        styles.host,
-        { top: insets.top + 8, opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [-24, 0] }) }] },
-      ]}
+      style={[styles.host, { top: insets.top + 8, opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [-24, 0] }) }] }]}
     >
       <Pressable
         onPress={hide}

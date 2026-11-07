@@ -46,7 +46,11 @@ export default function MyAdsScreen() {
   const ads = q.data ?? [];
   const live = ads.filter((a) => a.status === "active");
   const shown = ads.filter((a) => TABS.find((t) => t.id === tab)!.match(a.status));
-  const totals = live.reduce((t, a) => ({ views: t.views + a.view_count, reveals: t.reveals + a.contact_reveal_count, chats: t.chats + a.chats }), { views: 0, reveals: 0, chats: 0 });
+  const totals = live.reduce((t, a) => ({ views: t.views + a.view_count, reveals: t.reveals + a.contact_reveal_count, chats: t.chats + a.chats }), {
+    views: 0,
+    reveals: 0,
+    chats: 0,
+  });
 
   return (
     <View style={[styles.root, { backgroundColor: c.bg }]}>
@@ -104,7 +108,13 @@ export default function MyAdsScreen() {
                   const n = ads.filter((a) => t.match(a.status)).length;
                   const on = tab === t.id;
                   return (
-                    <Pressable key={t.id} role="tab" accessibilityState={{ selected: on }} onPress={() => setTab(t.id)} style={[styles.tab, { borderColor: on ? c.brand : c.border, backgroundColor: on ? c.brandSoft : c.surface }]}>
+                    <Pressable
+                      key={t.id}
+                      role="tab"
+                      accessibilityState={{ selected: on }}
+                      onPress={() => setTab(t.id)}
+                      style={[styles.tab, { borderColor: on ? c.brand : c.border, backgroundColor: on ? c.brandSoft : c.surface }]}
+                    >
                       <Text variant="small" weight="700" style={{ color: on ? c.brandSoftFg : c.fg }}>
                         {t.label} {n}
                       </Text>
@@ -122,7 +132,11 @@ export default function MyAdsScreen() {
               <Skeleton h={150} r={radius.xl} />
             </View>
           ) : ads.length === 0 ? (
-            <EmptyState icon={<LayoutList size={30} color={c.brandSoftFg} />} title="You haven't posted any ads yet" body="Selling a vehicle? Post it free in a few minutes and see what similar ones go for.">
+            <EmptyState
+              icon={<LayoutList size={30} color={c.brandSoftFg} />}
+              title="You haven't posted any ads yet"
+              body="Selling a vehicle? Post it free in a few minutes and see what similar ones go for."
+            >
               <Button title="Post your first ad" onPress={() => router.push("/post")} />
             </EmptyState>
           ) : (
@@ -211,7 +225,9 @@ function AdRow({ ad }: { ad: MyAd }) {
                 size="sm"
                 loading={busy === "sold"}
                 icon={<CheckCircle2 size={15} color={c.fg} />}
-                onPress={() => confirm("Mark as sold?", "Buyers will see it as sold and it stops appearing in search. You can relist it later.", "Mark as sold", () => change("sold"))}
+                onPress={() =>
+                  confirm("Mark as sold?", "Buyers will see it as sold and it stops appearing in search. You can relist it later.", "Mark as sold", () => change("sold"))
+                }
               />
             </>
           )}
@@ -235,7 +251,7 @@ function AdRow({ ad }: { ad: MyAd }) {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   headerBtn: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
-  list: { padding: 16, paddingBottom: 40, flexGrow: 1 },
+  list: { padding: 16, paddingBottom: 40, flexGrow: 1, width: "100%", maxWidth: 760, alignSelf: "center" },
   head: { gap: 14, marginBottom: 14 },
   stats: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   stat: { width: "47%", flexGrow: 1, borderWidth: 1, borderRadius: radius.xl, padding: 12, gap: 2 },

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Redirect, router } from "expo-router";
 import { Store, UserRound } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { displayLkPhone, normalizeLkPhone } from "@shared/format";
@@ -44,7 +44,11 @@ export default function ProfileScreen() {
     gcTime: 0,
     queryFn: async (): Promise<Values> => {
       const [{ data: p }, { data: ct }] = await Promise.all([
-        supabase.from("profiles").select("display_name, account_type, dealer_name, dealer_slug, dealer_about, dealer_address, district_id, city_id").eq("id", userId!).maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("display_name, account_type, dealer_name, dealer_slug, dealer_about, dealer_address, district_id, city_id")
+          .eq("id", userId!)
+          .maybeSingle(),
         supabase.from("profile_contacts").select("phone, whatsapp").eq("id", userId!).maybeSingle(),
       ]);
       return {
@@ -84,7 +88,6 @@ function Form({ userId, initial }: { userId: string; initial: Values }) {
     setV((p) => ({ ...p, [k]: val }));
     setErrors((e) => ({ ...e, [k]: undefined }));
   };
-  useEffect(() => setV(initial), [initial]);
 
   const save = async () => {
     const err: typeof errors = {};
@@ -139,7 +142,14 @@ function Form({ userId, initial }: { userId: string; initial: Values }) {
     <KeyboardAvoidingView style={[styles.root, { backgroundColor: c.bg }]} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
         <Section title="About you">
-          <Input label="Your name" value={v.display_name} onChangeText={(t) => set("display_name", t)} maxLength={60} placeholder="Shown to buyers and sellers" autoComplete="name" />
+          <Input
+            label="Your name"
+            value={v.display_name}
+            onChangeText={(t) => set("display_name", t)}
+            maxLength={60}
+            placeholder="Shown to buyers and sellers"
+            autoComplete="name"
+          />
           <Text variant="small" weight="700">
             Account type
           </Text>
@@ -185,7 +195,14 @@ function Form({ userId, initial }: { userId: string; initial: Values }) {
             }}
           />
           {!!v.district_id && (
-            <SelectField<number> label="Town" optional value={v.city_id} options={(cities.data ?? []).map((x) => ({ value: x.id, label: x.name }))} anyLabel="Not set" onChange={(x) => set("city_id", x)} />
+            <SelectField<number>
+              label="Town"
+              optional
+              value={v.city_id}
+              options={(cities.data ?? []).map((x) => ({ value: x.id, label: x.name }))}
+              anyLabel="Not set"
+              onChange={(x) => set("city_id", x)}
+            />
           )}
         </Section>
 
@@ -201,15 +218,48 @@ function Form({ userId, initial }: { userId: string; initial: Values }) {
               maxLength={80}
               error={errors.dealer_name}
             />
-            <Input label="Page link" prefix="/dealers/" value={v.dealer_slug} onChangeText={(t) => set("dealer_slug", slugify(t))} maxLength={50} autoCapitalize="none" error={errors.dealer_slug} />
-            <Input label="About" optional multiline value={v.dealer_about} onChangeText={(t) => set("dealer_about", t)} maxLength={1000} placeholder="What you sell, opening hours, after-sales service…" />
+            <Input
+              label="Page link"
+              prefix="/dealers/"
+              value={v.dealer_slug}
+              onChangeText={(t) => set("dealer_slug", slugify(t))}
+              maxLength={50}
+              autoCapitalize="none"
+              error={errors.dealer_slug}
+            />
+            <Input
+              label="About"
+              optional
+              multiline
+              value={v.dealer_about}
+              onChangeText={(t) => set("dealer_about", t)}
+              maxLength={1000}
+              placeholder="What you sell, opening hours, after-sales service…"
+            />
             <Input label="Showroom address" optional value={v.dealer_address} onChangeText={(t) => set("dealer_address", t)} maxLength={200} />
           </Section>
         )}
 
         <Section title="Contact details" hint="Filled in for you when you post an ad. Buyers only see them when they tap to reveal.">
-          <Input label="Phone" optional keyboardType="phone-pad" value={v.phone} onChangeText={(t) => set("phone", t)} placeholder="077 123 4567" error={errors.phone} autoComplete="tel" />
-          <Input label="WhatsApp" optional keyboardType="phone-pad" value={v.whatsapp} onChangeText={(t) => set("whatsapp", t)} placeholder="077 123 4567" error={errors.whatsapp} />
+          <Input
+            label="Phone"
+            optional
+            keyboardType="phone-pad"
+            value={v.phone}
+            onChangeText={(t) => set("phone", t)}
+            placeholder="077 123 4567"
+            error={errors.phone}
+            autoComplete="tel"
+          />
+          <Input
+            label="WhatsApp"
+            optional
+            keyboardType="phone-pad"
+            value={v.whatsapp}
+            onChangeText={(t) => set("whatsapp", t)}
+            placeholder="077 123 4567"
+            error={errors.whatsapp}
+          />
         </Section>
 
         <Button title="Save profile" size="lg" full loading={saving} onPress={save} />

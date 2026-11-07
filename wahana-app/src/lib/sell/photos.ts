@@ -63,5 +63,8 @@ export async function uploadPhoto(userId: string, folder: string, p: Picked) {
 
 export function removePhotos(paths: string[]) {
   if (!paths.length) return Promise.resolve();
-  return supabase.storage.from(PHOTO_BUCKET).remove(paths).then(() => {});
+  return supabase.storage
+    .from(PHOTO_BUCKET)
+    .remove(paths)
+    .then(() => {});
 }

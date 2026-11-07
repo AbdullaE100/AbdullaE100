@@ -25,10 +25,7 @@ export function InboxProvider({ children }: { children: ReactNode }) {
   }, [userId]);
 
   useEffect(() => {
-    if (!userId) {
-      setUnread(0);
-      return;
-    }
+    if (!userId) return;
     refresh();
     const channel = supabase
       .channel(`inbox:${userId}`)
@@ -50,6 +47,7 @@ export function InboxProvider({ children }: { children: ReactNode }) {
     };
   }, [userId, refresh, qc]);
 
-  const value = useMemo(() => ({ unread, refresh }), [unread, refresh]);
+  const shown = userId ? unread : 0;
+  const value = useMemo(() => ({ unread: shown, refresh }), [shown, refresh]);
   return <InboxContext value={value}>{children}</InboxContext>;
 }

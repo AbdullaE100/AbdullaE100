@@ -63,7 +63,14 @@ function Viewer({ photos, start, onClose, title }: { photos: Photo[]; start: num
   const [index, setIndex] = useState(0);
   const list = useRef<FlatList<Photo>>(null);
   return (
-    <Modal visible={start != null} animationType="fade" onRequestClose={onClose} statusBarTranslucent supportedOrientations={["portrait", "landscape"]} onShow={() => setIndex(start ?? 0)}>
+    <Modal
+      visible={start != null}
+      animationType="fade"
+      onRequestClose={onClose}
+      statusBarTranslucent
+      supportedOrientations={["portrait", "landscape"]}
+      onShow={() => setIndex(start ?? 0)}
+    >
       <StatusBar barStyle="light-content" />
       <View style={styles.viewer}>
         {start != null && (
@@ -77,9 +84,7 @@ function Viewer({ photos, start, onClose, title }: { photos: Photo[]; start: num
             showsHorizontalScrollIndicator={false}
             keyExtractor={(p) => p.id}
             onMomentumScrollEnd={(e) => setIndex(Math.round(e.nativeEvent.contentOffset.x / width))}
-            renderItem={({ item }) => (
-              <Image source={{ uri: photoUrl(item.path)! }} style={{ width, height }} contentFit="contain" accessibilityLabel={title} />
-            )}
+            renderItem={({ item }) => <Image source={{ uri: photoUrl(item.path)! }} style={{ width, height }} contentFit="contain" accessibilityLabel={title} />}
           />
         )}
         <View style={[styles.viewerBar, { top: insets.top + 8 }]}>

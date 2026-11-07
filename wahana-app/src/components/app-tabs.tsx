@@ -33,10 +33,7 @@ export default function AppTabs() {
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="chats">
         <NativeTabs.Trigger.Label>Chats</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          sf={{ default: "bubble.left.and.bubble.right", selected: "bubble.left.and.bubble.right.fill" }}
-          md={{ default: "chat", selected: "chat" }}
-        />
+        <NativeTabs.Trigger.Icon sf={{ default: "bubble.left.and.bubble.right", selected: "bubble.left.and.bubble.right.fill" }} md={{ default: "chat", selected: "chat" }} />
         {unread > 0 && <NativeTabs.Trigger.Badge>{unread > 9 ? "9+" : String(unread)}</NativeTabs.Trigger.Badge>}
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="account">

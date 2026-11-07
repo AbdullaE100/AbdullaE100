@@ -16,11 +16,5 @@ export function Text({
   ...props
 }: TextProps & { variant?: Variant; tone?: Tone; weight?: "400" | "500" | "600" | "700" | "800"; numeric?: boolean }) {
   const c = useColors();
-  return (
-    <RNText
-      maxFontSizeMultiplier={1.6}
-      {...props}
-      style={[type[variant], { color: toneColor(c, tone) }, weight && { fontWeight: weight }, numeric && tabular, style]}
-    />
-  );
+  return <RNText maxFontSizeMultiplier={1.6} {...props} style={[type[variant], { color: toneColor(c, tone) }, weight && { fontWeight: weight }, numeric && tabular, style]} />;
 }

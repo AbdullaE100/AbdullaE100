@@ -24,7 +24,7 @@ import {
   Wrench,
   Zap,
 } from "lucide-react-native";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Animated, Pressable, Share, StyleSheet, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ALL_BODY_LABELS, CONDITIONS, FUELS, TRANSMISSIONS, label, typeBySlug } from "@shared/constants";
@@ -73,7 +73,7 @@ export default function AdScreen() {
   const [expanded, setExpanded] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [reported, setReported] = useState(false);
-  const scrollY = useRef(new Animated.Value(0)).current;
+  const [scrollY] = useState(() => new Animated.Value(0));
   const galleryH = Math.round(Math.min(width, 900) * 0.75);
 
   const isOwner = !!l && userId === l.seller_id;
@@ -130,7 +130,7 @@ export default function AdScreen() {
         ["Engine", l.engine_cc ? `${formatNumber(l.engine_cc)} cc` : null],
         ["Fuel", l.fuel ? label(FUELS, l.fuel) : null],
         ["Transmission", l.transmission ? label(TRANSMISSIONS, l.transmission) : null],
-        ["Body", l.body_type ? ALL_BODY_LABELS[l.body_type] ?? l.body_type : t?.name ?? null],
+        ["Body", l.body_type ? (ALL_BODY_LABELS[l.body_type] ?? l.body_type) : (t?.name ?? null)],
         ["Colour", l.colour],
         ["Previous owners", l.previous_owners != null ? (l.previous_owners === 0 ? "None" : String(l.previous_owners)) : null],
         ["Leasing", l.leasing_available ? "Available" : null],
@@ -184,7 +184,12 @@ export default function AdScreen() {
 
         <View style={styles.body}>
           {params.posted === "1" && isOwner && (
-            <Banner tone="good" icon={<PartyPopper size={22} color={c.good} />} title="Your ad is live" body={`Share it with friends, or boost it to appear above other ${subject || "similar"} ads.`}>
+            <Banner
+              tone="good"
+              icon={<PartyPopper size={22} color={c.good} />}
+              title="Your ad is live"
+              body={`Share it with friends, or boost it to appear above other ${subject || "similar"} ads.`}
+            >
               <View style={styles.row}>
                 <Button title="Share" variant="secondary" size="sm" icon={<Share2 size={16} color={c.fg} />} onPress={share} />
                 <Button title="Boost ad" variant="accent" size="sm" onPress={() => router.push(`/promote/${l.id}`)} />
@@ -194,7 +199,15 @@ export default function AdScreen() {
           {!live && (
             <Banner
               tone={l.status === "sold" ? "good" : "high"}
-              icon={l.status === "sold" ? <CheckCircle2 size={22} color={c.good} /> : l.status === "expired" ? <Clock size={22} color={c.high} /> : <AlertTriangle size={22} color={c.high} />}
+              icon={
+                l.status === "sold" ? (
+                  <CheckCircle2 size={22} color={c.good} />
+                ) : l.status === "expired" ? (
+                  <Clock size={22} color={c.high} />
+                ) : (
+                  <AlertTriangle size={22} color={c.high} />
+                )
+              }
               title={
                 l.status === "sold"
                   ? `This vehicle was sold${l.sold_at ? ` on ${formatDate(l.sold_at)}` : ""}`
@@ -204,7 +217,13 @@ export default function AdScreen() {
                       ? "This ad is being reviewed"
                       : "This ad is no longer available"
               }
-              body={isOwner ? (l.status === "under_review" ? "Several people reported it, so it's hidden until a moderator checks it." : "Only you can see it now.") : "Similar vehicles that are still for sale are below."}
+              body={
+                isOwner
+                  ? l.status === "under_review"
+                    ? "Several people reported it, so it's hidden until a moderator checks it."
+                    : "Only you can see it now."
+                  : "Similar vehicles that are still for sale are below."
+              }
             />
           )}
 
@@ -246,7 +265,11 @@ export default function AdScreen() {
           </View>
 
           {live && (
-            <Pressable onPress={() => router.push({ pathname: "/leasing", params: { price: String(l.price_lkr) } })} accessibilityRole="link" style={({ pressed }) => [styles.lease, { backgroundColor: c.brandSoft }, pressed && { opacity: 0.8 }]}>
+            <Pressable
+              onPress={() => router.push({ pathname: "/leasing", params: { price: String(l.price_lkr) } })}
+              accessibilityRole="link"
+              style={({ pressed }) => [styles.lease, { backgroundColor: c.brandSoft }, pressed && { opacity: 0.8 }]}
+            >
               <Calculator size={18} color={c.brandSoftFg} />
               <Text variant="body" weight="700" style={[styles.flex, { color: c.brandSoftFg }]}>
                 Leasing from {formatLKR(monthly)}/month
@@ -363,7 +386,12 @@ export default function AdScreen() {
                 {memberSince ? ` · on Wahana since ${memberSince}` : ""}
               </Text>
               {(sellerAds.data?.total ?? 0) > 1 && (
-                <Pressable onPress={() => router.push({ pathname: "/seller/[id]", params: { id: l.seller_id, name: sellerName } })} accessibilityRole="link" hitSlop={6} style={styles.sellerLink}>
+                <Pressable
+                  onPress={() => router.push({ pathname: "/seller/[id]", params: { id: l.seller_id, name: sellerName } })}
+                  accessibilityRole="link"
+                  hitSlop={6}
+                  style={styles.sellerLink}
+                >
                   <Text variant="small" weight="700" tone="brand">
                     See all {sellerAds.data!.total} ads
                   </Text>
@@ -380,7 +408,7 @@ export default function AdScreen() {
                 Stay safe
               </Text>
               <Text variant="small" tone="muted">
-                Meet in a public place, check the CR book and chassis number, and never pay an advance before you've seen the vehicle.
+                Meet in a public place, check the CR book and chassis number, and never pay an advance before you’ve seen the vehicle.
               </Text>
             </View>
           </View>
@@ -425,7 +453,13 @@ export default function AdScreen() {
         </Text>
       </Animated.View>
       <View style={[styles.floatBar, { top: insets.top + 6 }]}>
-        <IconButton tone="outline" label="Back" icon={<ChevronLeft size={24} color={c.fg} />} onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))} style={cardShadow(c)} />
+        <IconButton
+          tone="outline"
+          label="Back"
+          icon={<ChevronLeft size={24} color={c.fg} />}
+          onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}
+          style={cardShadow(c)}
+        />
         <View style={styles.row}>
           <IconButton tone="outline" label="Share" icon={<Share2 size={20} color={c.fg} />} onPress={share} style={cardShadow(c)} />
           <FavButton id={l.id} source="ad_page" size={44} />
@@ -441,8 +475,22 @@ export default function AdScreen() {
         ) : live && target ? (
           <>
             <Button title="Call" icon={<Phone size={18} color="#fff" />} compact style={[{ flex: 1 }, styles.barBtn]} onPress={() => contact.call(target, "call")} />
-            <Button title="WhatsApp" icon={<WhatsAppIcon color={c.brandText} />} variant="outline" compact style={[{ flex: 1.25 }, styles.barBtn]} onPress={() => contact.call(target, "whatsapp")} />
-            <Button title="Chat" icon={<MessageCircle size={18} color={c.brandText} />} variant="outline" compact style={[{ flex: 0.95 }, styles.barBtn]} onPress={() => contact.chat(target)} />
+            <Button
+              title="WhatsApp"
+              icon={<WhatsAppIcon color={c.brandText} />}
+              variant="outline"
+              compact
+              style={[{ flex: 1.25 }, styles.barBtn]}
+              onPress={() => contact.call(target, "whatsapp")}
+            />
+            <Button
+              title="Chat"
+              icon={<MessageCircle size={18} color={c.brandText} />}
+              variant="outline"
+              compact
+              style={[{ flex: 0.95 }, styles.barBtn]}
+              onPress={() => contact.chat(target)}
+            />
           </>
         ) : (
           <Button
