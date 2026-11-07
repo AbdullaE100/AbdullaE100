@@ -137,7 +137,7 @@ export function VehiclePlaceholder({ type, seed = 0, label, style, artWidth = 14
         <VehicleArt type={type} width={artWidth} color={fg} bg={bg} />
       </View>
       {!!label && (
-        <Text variant="caption" tone="subtle" style={styles.phLabel}>
+        <Text variant="caption" tone="muted" weight="600" style={styles.phLabel}>
           {label}
         </Text>
       )}

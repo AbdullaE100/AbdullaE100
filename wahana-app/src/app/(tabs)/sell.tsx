@@ -35,8 +35,7 @@ export default function SellTab() {
   // Re-check for an unfinished draft whenever the tab comes into view.
   useFocusEffect(
     useCallback(() => {
-      if (!userId) return setDraft(null);
-      AsyncStorage.getItem(draftKey(userId))
+      AsyncStorage.getItem(draftKey(userId ?? "anon"))
         .then((raw) => {
           const saved = raw ? (JSON.parse(raw) as { draft: Draft; step: number }) : null;
           if (!saved?.draft?.vehicle_type) return setDraft(null);
@@ -47,12 +46,13 @@ export default function SellTab() {
     }, [userId, cat.data]),
   );
 
-  const start = () => (userId ? router.push("/post") : router.push({ pathname: "/signin", params: { reason: "sell", next: "/post" } }));
+  const start = () => router.push("/post");
   const live = (ads.data ?? []).filter((a) => a.status === "active");
 
   return (
     <View style={[styles.root, { backgroundColor: c.bg }]} collapsable={false}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}>
+      <View style={{ height: insets.top, backgroundColor: c.bg }} />
+      <ScrollView contentContainerStyle={[styles.content, { paddingTop: 12 }]}>
         <Text variant="h1" accessibilityRole="header">
           Sell
         </Text>

@@ -16,6 +16,7 @@ export default function AppTabs() {
       rippleColor={c.brandSoft}
       badgeBackgroundColor={c.dangerSolid}
       labelVisibilityMode="labeled"
+      disableTransparentOnScrollEdge
       tabBarRespectsIMEInsets={false}
     >
       <NativeTabs.Trigger name="index">

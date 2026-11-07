@@ -39,7 +39,7 @@ export default function AppTabs() {
   return (
     <Tabs style={styles.root}>
       <TabSlot style={styles.slot} />
-      <TabList style={[styles.bar, { backgroundColor: c.surface, borderTopColor: c.border, paddingBottom: Math.max(insets.bottom, 6) }]}>
+      <TabList role="tablist" style={[styles.bar, { backgroundColor: c.surface, borderTopColor: c.border, paddingBottom: Math.max(insets.bottom, 6) }]}>
         <TabTrigger name="index" href="/" asChild>
           <TabButton label="Home" Icon={House} />
         </TabTrigger>

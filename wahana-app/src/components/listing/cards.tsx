@@ -54,7 +54,7 @@ export const ListingCard = memo(function ListingCard({ l, width, source, style, 
         <Cover l={l} height={photoH} />
         <Flags l={l} />
         <PhotoCount n={l.photo_count} />
-        <FavButton id={l.id} source={source} size={36} style={styles.fav} />
+        <FavButton id={l.id} source={source} size={40} style={styles.fav} />
       </View>
       <View style={styles.cardBody}>
         <PriceTag price={l.price_lkr} />

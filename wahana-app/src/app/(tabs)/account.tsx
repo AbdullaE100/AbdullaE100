@@ -49,7 +49,8 @@ export default function AccountScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: c.bg }]} collapsable={false}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}>
+      <View style={{ height: insets.top, backgroundColor: c.bg }} />
+      <ScrollView contentContainerStyle={[styles.content, { paddingTop: 12 }]}>
         <Text variant="h1" accessibilityRole="header">
           Account
         </Text>
@@ -144,7 +145,6 @@ function Stat({ value, label, onPress, highlight }: { value: number; label: stri
       variant="secondary"
       onPress={onPress}
       style={[styles.stat, highlight && { borderColor: c.brand, backgroundColor: c.brandSoft }]}
-      accessibilityLabel={`${label}: ${value}`}
       icon={
         <View style={styles.statInner}>
           <Text variant="h2" numeric tone={highlight ? "brand" : "default"}>

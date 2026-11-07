@@ -62,6 +62,7 @@ function Navigator() {
         <Stack.Screen name="value" options={{ title: "Value my vehicle" }} />
         <Stack.Screen name="seller/[id]" options={{ title: "Seller" }} />
         <Stack.Screen name="promote/[id]" options={{ title: "Promote your ad" }} />
+        <Stack.Screen name="auth/callback" options={{ title: "Signing in", headerShown: false }} />
         <Stack.Screen name="+not-found" options={{ title: "Not found" }} />
       </Stack>
     </ThemeProvider>

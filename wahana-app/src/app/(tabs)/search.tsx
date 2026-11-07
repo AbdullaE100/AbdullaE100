@@ -153,7 +153,7 @@ export default function SearchScreen() {
           onPress={save}
           disabled={saving}
           accessibilityRole="button"
-          accessibilityLabel={savedRow ? "Search saved. Open saved searches" : "Save this search"}
+          accessibilityLabel={savedRow ? "Saved, open saved searches" : "Save search"}
           style={({ pressed }) => [styles.save, { borderColor: savedRow ? c.brand : c.borderStrong, backgroundColor: savedRow ? c.brandSoft : pressed ? c.surface2 : c.surface }]}
         >
           {savedRow ? <BookmarkCheck size={16} color={c.brandSoftFg} /> : <Bookmark size={16} color={c.fg} />}

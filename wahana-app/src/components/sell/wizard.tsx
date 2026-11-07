@@ -44,7 +44,7 @@ const money = (v: string) => {
 
 export type SellerDefaults = { phone: string; whatsapp: string; name: string; hasSaved: boolean };
 
-export function SellWizard({ mode, listingId, userId, initial, defaults }: { mode: "create" | "edit"; listingId?: number; userId: string; initial?: Draft; defaults: SellerDefaults }) {
+export function SellWizard({ mode, listingId, userId, initial, defaults }: { mode: "create" | "edit"; listingId?: number; userId: string | null; initial?: Draft; defaults: SellerDefaults }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
@@ -70,6 +70,7 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
   const [publishing, setPublishing] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const loaded = useRef(mode !== "create");
+  const awaitingAuth = useRef(false);
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const started = useRef(false);
 
@@ -86,10 +87,12 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
     }
   }, [mode]);
 
-  // Restore an unfinished draft (create mode only).
+  // Restore an unfinished draft once, on open (create mode only).
+  const didRestore = useRef(false);
   useEffect(() => {
-    if (mode !== "create") return;
-    AsyncStorage.getItem(draftKey(userId))
+    if (mode !== "create" || didRestore.current) return;
+    didRestore.current = true;
+    AsyncStorage.getItem(draftKey(userId ?? "anon"))
       .then((raw) => {
         if (!raw) return;
         const saved = JSON.parse(raw) as { draft: Draft; step: number };
@@ -111,7 +114,7 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
     if (mode !== "create" || !loaded.current) return;
     const t = setTimeout(() => {
       const photos = d.photos.filter((p) => p.status === "done").map(({ localUri: _l, ...rest }) => rest);
-      AsyncStorage.setItem(draftKey(userId), JSON.stringify({ draft: { ...d, photos }, step })).catch(() => {});
+      AsyncStorage.setItem(draftKey(userId ?? "anon"), JSON.stringify({ draft: { ...d, photos }, step })).catch(() => {});
     }, 400);
     return () => clearTimeout(t);
   }, [d, step, mode, userId]);
@@ -137,9 +140,34 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
       scroll.current?.scrollTo({ y: 0, animated: true });
       return;
     }
-    track("sell_step_completed", { step: current, index: step, mode });
+    track("sell_step_completed", { step: current, index: step, mode, signed_in: !!userId });
+    // Photos are stored under the seller's account, so this is where we ask them to sign in.
+    if (!userId && step + 1 >= 2) {
+      awaitingAuth.current = true;
+      router.push({ pathname: "/signin", params: { reason: "sell_continue" } });
+      return;
+    }
     goto(Math.min(step + 1, STEPS.length - 1));
   };
+
+  // Back from signing in: carry the draft over to their account and continue.
+  useEffect(() => {
+    if (!userId || mode !== "create") return;
+    AsyncStorage.removeItem(draftKey("anon")).catch(() => {});
+    setD((p) => ({
+      ...p,
+      phone: p.phone || defaults.phone,
+      whatsapp: p.whatsapp || (defaults.whatsapp && defaults.whatsapp !== defaults.phone ? defaults.whatsapp : ""),
+      whatsapp_mode: p.phone ? p.whatsapp_mode : defaults.whatsapp && defaults.whatsapp !== defaults.phone ? "other" : "same",
+      seller_name: p.seller_name || defaults.name,
+    }));
+    setSaveContact(!defaults.hasSaved);
+    if (awaitingAuth.current) {
+      awaitingAuth.current = false;
+      goto(2);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, defaults]);
 
   const back = () => (step > 0 ? goto(step - 1) : exit());
 
@@ -154,7 +182,7 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
   };
 
   const startOver = () => {
-    AsyncStorage.removeItem(draftKey(userId)).catch(() => {});
+    AsyncStorage.removeItem(draftKey(userId ?? "anon")).catch(() => {});
     setD({ ...emptyDraft(), phone: defaults.phone, whatsapp: "", whatsapp_mode: "same", seller_name: defaults.name });
     setMakeOther(false);
     setModelOther(false);
@@ -168,6 +196,11 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
       const i = STEPS.findIndex((s) => s.id === bad);
       goto(i);
       setTimeout(() => setErrors(validate(bad, d)), 50);
+      return;
+    }
+    if (!userId) {
+      awaitingAuth.current = false;
+      router.push({ pathname: "/signin", params: { reason: "sell_continue" } });
       return;
     }
     setPublishing(true);
@@ -471,7 +504,11 @@ export function SellWizard({ mode, listingId, userId, initial, defaults }: { mod
 
   const stepPhotos = (
     <>
-      <PhotoGrid userId={userId} folder={d.folder} photos={d.photos} onChange={(fn) => setD((p) => ({ ...p, photos: fn(p.photos) }))} />
+      {userId ? (
+        <PhotoGrid userId={userId} folder={d.folder} photos={d.photos} onChange={(fn) => setD((p) => ({ ...p, photos: fn(p.photos) }))} />
+      ) : (
+        <Button title="Sign in to add photos" size="lg" onPress={() => router.push({ pathname: "/signin", params: { reason: "sell_continue" } })} />
+      )}
       {!!errors.photos_pending && <Notice tone="danger" text={errors.photos_pending} />}
       {d.photos.length === 0 && <Notice tone="info" text="You can publish without photos, but ads with photos get many more calls. You can add them later too." />}
     </>

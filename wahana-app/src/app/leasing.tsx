@@ -64,7 +64,18 @@ export default function LeasingScreen() {
           <Pressable onPress={() => step(-5)} disabled={downPct <= 10} accessibilityRole="button" accessibilityLabel="Decrease down payment" style={[styles.stepBtn, { borderColor: c.borderStrong }, downPct <= 10 && styles.off]}>
             <Minus size={20} color={c.fg} />
           </Pressable>
-          <View style={styles.stepVal} accessible accessibilityRole="adjustable" accessibilityValue={{ text: `${downPct} percent` }}>
+          <View
+            style={styles.stepVal}
+            accessible
+            accessibilityRole="adjustable"
+            accessibilityLabel="Down payment"
+            aria-valuemin={10}
+            aria-valuemax={90}
+            aria-valuenow={downPct}
+            aria-valuetext={`${downPct} percent, ${formatLKR(down)}`}
+            accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
+            onAccessibilityAction={(e) => step(e.nativeEvent.actionName === "increment" ? 5 : -5)}
+          >
             <Text variant="h3" numeric>
               {downPct}%
             </Text>

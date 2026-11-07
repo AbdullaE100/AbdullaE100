@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { useToast } from "@/components/ui/toast";
 import { track } from "@/lib/analytics";
-import { SITE_URL } from "@/lib/env";
+import { authRedirect } from "@/lib/auth-links";
 import { pendingAction } from "@/lib/pending";
 import { supabase } from "@/lib/supabase";
 import { radius, useColors } from "@/lib/theme";
@@ -32,6 +32,7 @@ const REASONS: Record<string, { icon: typeof Heart; text: string }> = {
   save_search: { icon: Bookmark, text: "Sign in to save this search and see what's new each time." },
   saved: { icon: Heart, text: "Sign in to keep your saved ads on all your devices." },
   sell: { icon: CirclePlus, text: "Sign in to post your ad. It's free and takes a few minutes." },
+  sell_continue: { icon: CirclePlus, text: "Sign in to add photos and publish. Your answers so far are saved." },
   report: { icon: Flag, text: "Sign in to report an ad, so we can follow up if needed." },
 };
 
@@ -75,7 +76,7 @@ export default function SignInScreen() {
     if (Object.keys(fe).length) return;
     setBusy(true);
     const addr = email.trim().toLowerCase();
-    const callback = `${SITE_URL}/auth/callback?next=${encodeURIComponent(next && next.startsWith("/") ? next : "/")}`;
+    const callback = authRedirect(next && next.startsWith("/") ? next : "/");
     try {
       if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email: addr, password });
@@ -97,7 +98,7 @@ export default function SignInScreen() {
         setSent("magic");
       }
       if (mode === "reset") {
-        const { error } = await supabase.auth.resetPasswordForEmail(addr, { redirectTo: `${SITE_URL}/auth/callback?next=${encodeURIComponent("/account/profile?reset=1")}` });
+        const { error } = await supabase.auth.resetPasswordForEmail(addr, { redirectTo: authRedirect("/profile") });
         if (error) throw error;
         setSent("reset");
       }
@@ -138,9 +139,9 @@ export default function SignInScreen() {
               Check your email
             </Text>
             <Text tone="muted" style={styles.center}>
-              {sent === "confirm" && `We sent a confirmation link to ${email.trim()}. Open it, then come back here and sign in.`}
+              {sent === "confirm" && `We sent a confirmation link to ${email.trim()}. Open it on this phone to finish, or come back here and sign in.`}
               {sent === "magic" && `We sent a sign-in link to ${email.trim()}. It works once and expires in an hour.`}
-              {sent === "reset" && `If there's an account for ${email.trim()}, you'll get a link to choose a new password.`}
+              {sent === "reset" && `If there's an account for ${email.trim()}, you'll get a link. Open it on this phone, then set a new password in Profile.`}
             </Text>
             <Text variant="small" tone="subtle" style={styles.center}>
               Nothing yet? Check your spam folder, or wait a minute and try again.
@@ -244,7 +245,7 @@ export default function SignInScreen() {
                   onSubmitEditing={submit}
                   error={fieldErr.password}
                   right={
-                    <Pressable onPress={() => setShow((s) => !s)} accessibilityRole="button" accessibilityLabel={show ? "Hide password" : "Show password"} hitSlop={10}>
+                    <Pressable onPress={() => setShow((s) => !s)} accessibilityRole="button" accessibilityLabel={show ? "Hide password" : "Show password"} hitSlop={14}>
                       {show ? <EyeOff size={20} color={c.fgMuted} /> : <Eye size={20} color={c.fgMuted} />}
                     </Pressable>
                   }

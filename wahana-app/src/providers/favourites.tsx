@@ -48,8 +48,10 @@ export function FavouritesProvider({ children }: { children: ReactNode }) {
       }
       // Carry over ads saved before signing in; keep only the ones that failed for a retryable reason.
       if (local.length) {
-        const results = await Promise.all(local.map((listing_id) => supabase.from("favourites").insert({ user_id: userId, listing_id })));
-        localSavedStore.set(local.filter((_, i) => results[i].error && results[i].error!.code !== "23505" && results[i].error!.code !== "23503"));
+        const results = await Promise.all(
+          local.map((listing_id) => supabase.from("favourites").upsert({ user_id: userId, listing_id }, { onConflict: "user_id,listing_id", ignoreDuplicates: true })),
+        );
+        localSavedStore.set(local.filter((_, i) => results[i].error && results[i].error!.code !== "23503"));
       }
       const { data } = await supabase.from("favourites").select("listing_id, created_at").order("created_at", { ascending: false }).limit(500);
       if (!cancelled) {
@@ -81,7 +83,7 @@ export function FavouritesProvider({ children }: { children: ReactNode }) {
       }
       if (on) setSavedAt((m) => ({ ...m, [id]: new Date().toISOString() }));
       const req = on
-        ? supabase.from("favourites").insert({ user_id: userId, listing_id: id })
+        ? supabase.from("favourites").upsert({ user_id: userId, listing_id: id }, { onConflict: "user_id,listing_id", ignoreDuplicates: true })
         : supabase.from("favourites").delete().eq("user_id", userId).eq("listing_id", id);
       req.then(({ error }) => {
         if (error && error.code !== "23505") {

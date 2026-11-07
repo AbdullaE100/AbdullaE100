@@ -1,4 +1,3 @@
-import { Redirect } from "expo-router";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useSellerDefaults } from "@/components/sell/loaders";
 import { SellWizard } from "@/components/sell/wizard";
@@ -9,15 +8,18 @@ export default function PostScreen() {
   const c = useColors();
   const { ready, userId } = useSession();
   const defaults = useSellerDefaults(userId);
-  if (ready && !userId) return <Redirect href={{ pathname: "/signin", params: { reason: "sell", next: "/post" } }} />;
-  if (!userId || !defaults.data) {
+  // Anyone can start an ad; the wizard asks them to sign in before photos.
+  // Stay mounted through sign-in so nothing typed so far is lost.
+  if (!ready) {
     return (
       <View style={[styles.center, { backgroundColor: c.bg }]}>
         <ActivityIndicator color={c.brand} />
       </View>
     );
   }
-  return <SellWizard mode="create" userId={userId} defaults={defaults.data} />;
+  return <SellWizard mode="create" userId={userId} defaults={defaults.data ?? ANON} />;
 }
+
+const ANON = { phone: "", whatsapp: "", name: "", hasSaved: false };
 
 const styles = StyleSheet.create({ center: { flex: 1, alignItems: "center", justifyContent: "center" } });

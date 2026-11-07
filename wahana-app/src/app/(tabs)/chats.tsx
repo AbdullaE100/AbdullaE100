@@ -31,7 +31,7 @@ export default function ChatsScreen() {
   const unread = all.filter((r) => r.unread).length;
 
   const head = (
-    <View style={[styles.head, { paddingTop: insets.top + 12 }]}>
+    <View style={[styles.head, { paddingTop: 12 }]}>
       <Text variant="h1" accessibilityRole="header">
         Chats
       </Text>
@@ -51,7 +51,7 @@ export default function ChatsScreen() {
 
   if (ready && !userId) {
     return (
-      <View style={[styles.root, { backgroundColor: c.bg }]}>
+      <View style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}>
         {head}
         <EmptyState icon={<MessagesSquare size={30} color={c.brandSoftFg} />} title="Message sellers privately" body="Sign in to chat with sellers and buyers. Your phone number and email stay hidden.">
           <Button title="Sign in" size="lg" onPress={() => router.push("/signin")} />
@@ -63,6 +63,7 @@ export default function ChatsScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: c.bg }]} collapsable={false}>
+      <View style={{ height: insets.top, backgroundColor: c.bg }} />
       <FlatList
         data={rows}
         keyExtractor={(r) => r.id}

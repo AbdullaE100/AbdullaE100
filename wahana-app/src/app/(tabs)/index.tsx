@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { Calculator, ChevronRight, Gauge, Heart, Search, Store } from "lucide-react-native";
+import { Calculator, ChevronRight, Gauge, Heart, Search, Store, WifiOff } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -110,7 +110,6 @@ export default function HomeScreen() {
                 key={t.slug}
                 onPress={() => openSearch({ type: t.slug })}
                 accessibilityRole="button"
-                accessibilityLabel={`${t.plural}${s?.by_type[t.slug] ? `, ${s.by_type[t.slug]} ads` : ""}`}
                 style={({ pressed }) => [styles.typeTile, { backgroundColor: pressed ? c.surface3 : c.surface2 }]}
               >
                 <VehicleArt type={t.slug} width={64} color={c.fgMuted} bg={c.surface2} />
@@ -119,13 +118,28 @@ export default function HomeScreen() {
                 </Text>
                 {!!s?.by_type[t.slug] && (
                   <Text variant="caption" tone="subtle" numeric>
-                    {formatNumber(s.by_type[t.slug])}
+                    {formatNumber(s.by_type[t.slug])} ads
                   </Text>
                 )}
               </Pressable>
             ))}
           </ScrollView>
         </View>
+
+        {summary.isError && !s && (
+          <View style={[styles.offline, { backgroundColor: c.highSoft }]} role="alert">
+            <WifiOff size={20} color={c.high} />
+            <View style={styles.flex}>
+              <Text variant="body" weight="700">
+                Can't reach Wahana
+              </Text>
+              <Text variant="small" tone="muted">
+                Check your internet connection. Saved and recently viewed ads still work.
+              </Text>
+            </View>
+            <Button title="Retry" size="sm" variant="secondary" onPress={onRefresh} />
+          </View>
+        )}
 
         {!!recentItems?.length && (
           <View style={styles.section}>
@@ -153,7 +167,6 @@ export default function HomeScreen() {
                   key={m.slug}
                   onPress={() => openSearch({ make: m.slug })}
                   accessibilityRole="button"
-                  accessibilityLabel={`${m.name}, ${m.count} ads`}
                   style={({ pressed }) => [styles.makeTile, { borderColor: c.border, backgroundColor: pressed ? c.surface2 : c.surface }]}
                 >
                   <Text variant="body" weight="700" numberOfLines={1}>
@@ -285,6 +298,7 @@ const styles = StyleSheet.create({
   tools: { paddingHorizontal: 16, gap: 10 },
   tool: { flexDirection: "row", alignItems: "center", gap: 14, padding: 14, borderWidth: 1, borderRadius: radius.xl },
   toolIcon: { width: 44, height: 44, borderRadius: radius.lg, alignItems: "center", justifyContent: "center" },
+  offline: { flexDirection: "row", alignItems: "center", gap: 12, margin: 16, marginBottom: 0, padding: 14, borderRadius: radius.xl },
   sell: { marginTop: 32, marginHorizontal: 16, borderRadius: radius.xxl, padding: 20, gap: 8 },
   sellBtn: { marginTop: 8, alignSelf: "flex-start", borderColor: "transparent" },
 });
