@@ -1,0 +1,58 @@
+{
+  "expo": {
+    "name": "Wahana",
+    "slug": "wahana",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "wahana",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "lk.wahana.app",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Choose photos of the vehicle you're selling.",
+        "NSCameraUsageDescription": "Take photos of the vehicle you're selling.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "lk.wahana.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#168650",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": true
+    },
+    "web": {
+      "output": "single",
+      "favicon": "./assets/images/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#ffffff",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 96,
+          "dark": { "backgroundColor": "#0a0c10", "image": "./assets/images/splash-icon.png" }
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Choose photos of the vehicle you're selling.",
+          "cameraPermission": "Take photos of the vehicle you're selling."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

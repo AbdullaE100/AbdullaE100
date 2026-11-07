@@ -42,7 +42,18 @@ export function formatKmShort(n: number | null | undefined) {
   return `${n} km`;
 }
 
-const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+// Hermes (React Native) may lack Intl.RelativeTimeFormat; fall back to plain English.
+const rtf: { format: (n: number, unit: Intl.RelativeTimeFormatUnit) => string } =
+  typeof Intl !== "undefined" && "RelativeTimeFormat" in Intl
+    ? new Intl.RelativeTimeFormat("en", { numeric: "auto" })
+    : {
+        format: (n, unit) => {
+          const a = Math.abs(n);
+          if (unit === "day" && n === -1) return "yesterday";
+          const word = `${a} ${unit}${a === 1 ? "" : "s"}`;
+          return n < 0 ? `${word} ago` : `in ${word}`;
+        },
+      };
 const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ["year", 31_536_000],
   ["month", 2_592_000],
@@ -65,10 +76,18 @@ export function timeAgo(date: string | Date | null | undefined, now = Date.now()
 
 // Always Sri Lanka time, so the server (UTC) and the browser render the same text.
 export const TZ = "Asia/Colombo";
-const df = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: TZ });
-const dfShort = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: TZ });
-const tf = new Intl.DateTimeFormat("en-GB", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: TZ });
-const dayKeyFmt = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: TZ });
+// Engines without time-zone data reject `timeZone`; fall back to the device zone.
+function dtf(locale: string, opts: Intl.DateTimeFormatOptions) {
+  try {
+    return new Intl.DateTimeFormat(locale, { ...opts, timeZone: TZ });
+  } catch {
+    return new Intl.DateTimeFormat(locale, opts);
+  }
+}
+const df = dtf("en-GB", { day: "numeric", month: "short", year: "numeric" });
+const dfShort = dtf("en-GB", { day: "numeric", month: "short" });
+const tf = dtf("en-GB", { hour: "numeric", minute: "2-digit", hour12: true });
+const dayKeyFmt = dtf("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" });
 
 /** YYYY-MM-DD in Sri Lanka time. */
 export const dayKey = (d: string | Date | number) => dayKeyFmt.format(new Date(d));
