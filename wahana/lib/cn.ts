@@ -9,7 +9,7 @@ const twMerge = extendTailwindMerge({
       color: [
         "bg", "surface", "surface-2", "surface-3", "border", "border-strong", "fg", "fg-muted", "fg-subtle",
         "brand", "brand-hover", "brand-fg", "brand-text", "brand-soft", "brand-soft-fg",
-        "accent", "accent-soft", "accent-fg", "good", "good-soft", "high", "high-soft", "danger", "danger-soft", "overlay",
+        "accent", "accent-soft", "accent-fg", "good", "good-soft", "high", "high-soft", "danger", "danger-soft", "danger-solid", "overlay",
       ],
     },
   },

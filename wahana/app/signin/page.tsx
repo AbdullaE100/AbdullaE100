@@ -8,6 +8,16 @@ import { site } from "@/lib/site";
 
 export const metadata: Metadata = { title: "Sign in", robots: { index: false } };
 
+const NOTICES: Record<string, { tone: "good" | "bad"; text: string }> = {
+  confirmed: { tone: "good", text: "Your email is confirmed. Sign in to continue." },
+  other_browser: {
+    tone: "bad",
+    text: "That link has to be opened in the browser you used to sign up or request it. If you just signed up, your email is confirmed now: sign in below, or ask for a new sign-in link.",
+  },
+  reset_other_browser: { tone: "bad", text: "Password reset links only work in the browser you requested them from. Ask for a new one below." },
+  link_expired: { tone: "bad", text: "That link has expired or was already used. Ask for a new one below." },
+};
+
 const REASONS: Record<string, string> = {
   chat: "Sign in to message the seller",
   sell: "Sign in to post your ad",
@@ -19,18 +29,20 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
   const next = safeNext(sp.next);
   if (await getUser()) redirect(next);
   const heading = REASONS[sp.reason ?? ""] ?? `Welcome to ${site.name}`;
+  // Only fixed messages: never echo text from the URL.
+  const notice = sp.confirmed ? NOTICES.confirmed : sp.error ? NOTICES[sp.error] ?? NOTICES.link_expired : null;
 
   return (
     <div className="container-page grid min-h-[calc(100dvh-4rem)] items-start gap-10 py-8 sm:py-14 lg:grid-cols-2 lg:items-center">
       <div className="mx-auto w-full max-w-md">
         <h1 className="text-3xl font-extrabold">{heading}</h1>
         <p className="mb-6 mt-2 text-fg-muted">One account for buying and selling. It&apos;s free.</p>
-        {sp.confirmed && (
-          <p className="mb-5 flex items-start gap-2 rounded-xl border border-good/30 bg-good-soft p-3 text-sm">
-            <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-good" /> Your email is confirmed. Sign in to continue.
+        {notice && (
+          <p className={`mb-5 flex items-start gap-2 rounded-xl border p-3 text-sm ${notice.tone === "good" ? "border-good/30 bg-good-soft" : "border-danger/30 bg-danger-soft text-danger"}`}>
+            {notice.tone === "good" && <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-good" />}
+            {notice.text}
           </p>
         )}
-        {sp.error && <p className="mb-5 rounded-xl border border-danger/30 bg-danger-soft p-3 text-sm text-danger">{sp.error}</p>}
         <div className="rounded-3xl border border-border bg-surface p-5 shadow-sm sm:p-7">
           <AuthForm next={next} initialMode={sp.mode === "signup" ? "signup" : "signin"} />
         </div>

@@ -65,7 +65,20 @@ export function SellWizard({
 }) {
   const router = useRouter();
   const { toast } = useToast();
-  const [d, setD] = useState<Draft>(() => initial ?? { ...emptyDraft(), phone: defaultContact.phone, whatsapp: defaultContact.whatsapp, whatsapp_same: !defaultContact.whatsapp || defaultContact.whatsapp === defaultContact.phone, seller_name: defaultContact.name });
+  const [d, setD] = useState<Draft>(
+    () =>
+      initial ?? {
+        ...emptyDraft(),
+        phone: defaultContact.phone,
+        whatsapp: defaultContact.whatsapp && defaultContact.whatsapp !== defaultContact.phone ? defaultContact.whatsapp : "",
+        whatsapp_mode: defaultContact.whatsapp && defaultContact.whatsapp !== defaultContact.phone ? "other" : "same",
+        seller_name: defaultContact.name,
+      },
+  );
+  const [makeOther, setMakeOther] = useState(!!d.make_other && !d.make_id);
+  const [modelOther, setModelOther] = useState(!!d.model_other && !d.model_id);
+  /** Set once the listing row exists, so a retry never creates a second ad. */
+  const created = useRef<{ id: number; slug: string } | null>(null);
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState<Errors>({});
   const [restored, setRestored] = useState(false);
@@ -77,8 +90,6 @@ export function SellWizard({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const loaded = useRef(false);
-  const initialPhotoIds = useRef(new Set((initial?.photos ?? []).map((p) => p.id).filter(Boolean) as string[]));
-  const initialPhotoPaths = useRef(new Map((initial?.photos ?? []).filter((p) => p.id).map((p) => [p.id!, [p.path!, p.thumb_path].filter(Boolean) as string[]])));
 
   const current = STEPS[step].id;
   const set = useCallback(<K extends keyof Draft>(k: K, v: Draft[K]) => {
@@ -95,7 +106,11 @@ export function SellWizard({
       if (!raw) return;
       const saved = JSON.parse(raw) as { draft: Draft; step: number };
       if (!saved?.draft?.vehicle_type) return;
-      setD({ ...emptyDraft(), ...saved.draft, photos: (saved.draft.photos ?? []).filter((p) => p.status === "done").map((p) => ({ ...p, preview: undefined })) });
+      const legacy = saved.draft as Draft & { whatsapp_same?: boolean };
+      const whatsapp_mode = legacy.whatsapp_mode ?? (legacy.whatsapp_same === false ? (legacy.whatsapp ? "other" : "none") : "same");
+      setD({ ...emptyDraft(), ...saved.draft, whatsapp_mode, photos: (saved.draft.photos ?? []).filter((p) => p.status === "done").map((p) => ({ ...p, preview: undefined })) });
+      setMakeOther(!!saved.draft.make_other && !saved.draft.make_id);
+      setModelOther(!!saved.draft.model_other && !saved.draft.model_id);
       setStep(Math.min(saved.step ?? 0, STEPS.length - 1));
       setRestored(true);
     } catch {}
@@ -180,62 +195,75 @@ export function SellWizard({
     const db = supabaseBrowser();
     const row = toListingRow(d);
     const phone = normalizeLkPhone(d.phone)!;
-    const whatsapp = d.whatsapp_same ? phone : d.whatsapp ? normalizeLkPhone(d.whatsapp) : null;
+    const whatsapp = d.whatsapp_mode === "same" ? phone : d.whatsapp_mode === "other" ? normalizeLkPhone(d.whatsapp) : null;
     const contact = { phone, whatsapp, seller_name: d.seller_name.trim().slice(0, 60) || null };
     const done = d.photos.filter((p) => p.status === "done" && p.path);
+    const isNew = mode === "create";
+    let liveAlready = false;
 
     try {
-      let id = listingId!;
-      let slug = "";
-      if (mode === "create") {
+      // 1. The listing row: created once; later attempts update it instead.
+      let target = mode === "edit" ? { id: listingId!, slug: "" } : created.current;
+      if (!target) {
         const { data, error } = await db.from("listings").insert({ ...row, seller_id: userId }).select("id, slug").single();
         if (error) throw error;
-        id = data.id;
-        slug = data.slug;
-        const c = await db.from("listing_contacts").insert({ listing_id: id, ...contact });
-        if (c.error) throw c.error;
-        if (done.length) {
-          const p = await db.from("listing_photos").insert(
-            done.map((ph, i) => ({ listing_id: id, path: ph.path!, thumb_path: ph.thumb_path ?? null, width: ph.width ?? null, height: ph.height ?? null, position: i })),
-          );
-          if (p.error) throw p.error;
-        }
+        target = created.current = { id: data.id, slug: data.slug };
       } else {
-        const { data, error } = await db.from("listings").update(row).eq("id", id).select("id, slug").single();
+        const { data, error } = await db.from("listings").update(row).eq("id", target.id).select("id, slug").single();
         if (error) throw error;
-        slug = data.slug;
-        const c = await db.from("listing_contacts").upsert({ listing_id: id, ...contact }, { onConflict: "listing_id" });
-        if (c.error) throw c.error;
-        const keep = new Set(done.map((p) => p.id).filter(Boolean) as string[]);
-        const removed = [...initialPhotoIds.current].filter((pid) => !keep.has(pid));
-        if (removed.length) {
-          await db.from("listing_photos").delete().in("id", removed);
-          const paths = removed.flatMap((pid) => initialPhotoPaths.current.get(pid) ?? []);
-          db.storage.from("listing-photos").remove(paths).then(() => {});
-        }
-        for (const [i, ph] of done.entries()) {
-          if (ph.id) await db.from("listing_photos").update({ position: i }).eq("id", ph.id);
-        }
-        const fresh = done.map((ph, i) => ({ ph, i })).filter(({ ph }) => !ph.id);
-        if (fresh.length) {
-          const p = await db
-            .from("listing_photos")
-            .insert(fresh.map(({ ph, i }) => ({ listing_id: id, path: ph.path!, thumb_path: ph.thumb_path ?? null, width: ph.width ?? null, height: ph.height ?? null, position: i })));
-          if (p.error) throw p.error;
+        target = { id: data.id, slug: data.slug };
+        if (isNew) created.current = target;
+      }
+      liveAlready = isNew;
+      const { id, slug } = target;
+
+      // 2. Contact details (upsert is safe to repeat).
+      const c = await db.from("listing_contacts").upsert({ listing_id: id, ...contact }, { onConflict: "listing_id" });
+      if (c.error) throw c.error;
+
+      // 3. Photos: make the rows match the draft, then tidy storage.
+      const { data: rows, error: rowsErr } = await db.from("listing_photos").select("id, path, thumb_path, position").eq("listing_id", id);
+      if (rowsErr) throw rowsErr;
+      const wanted = new Map(done.map((p, i) => [p.path!, i]));
+      const stale = (rows ?? []).filter((r) => !wanted.has(r.path));
+      if (stale.length) {
+        const del = await db.from("listing_photos").delete().in("id", stale.map((r) => r.id));
+        if (del.error) throw del.error;
+        // Only remove the files once their rows are gone.
+        db.storage.from("listing-photos").remove(stale.flatMap((r) => [r.path, r.thumb_path].filter(Boolean) as string[])).then(() => {});
+      }
+      const have = new Map((rows ?? []).filter((r) => wanted.has(r.path)).map((r) => [r.path, r]));
+      for (const [path, pos] of wanted) {
+        const r = have.get(path);
+        if (r && r.position !== pos) {
+          const u = await db.from("listing_photos").update({ position: pos }).eq("id", r.id);
+          if (u.error) throw u.error;
         }
       }
+      const fresh = done.map((ph, i) => ({ ph, i })).filter(({ ph }) => !have.has(ph.path!));
+      if (fresh.length) {
+        const p = await db
+          .from("listing_photos")
+          .insert(fresh.map(({ ph, i }) => ({ listing_id: id, path: ph.path!, thumb_path: ph.thumb_path ?? null, width: ph.width ?? null, height: ph.height ?? null, position: i })));
+        if (p.error) throw p.error;
+      }
+
       if (saveContact) {
         await db.from("profile_contacts").upsert({ id: userId, phone, whatsapp }, { onConflict: "id" });
       }
       try {
         localStorage.removeItem(draftKey(userId));
       } catch {}
-      toast({ tone: "success", title: mode === "create" ? "Your ad is live" : "Changes saved" });
-      router.push(mode === "create" ? `/ad/${id}/${slug}?posted=1` : `/ad/${id}/${slug}`);
+      toast({ tone: "success", title: isNew ? "Your ad is live" : "Changes saved" });
+      router.push(isNew ? `/ad/${id}/${slug}?posted=1` : `/ad/${id}/${slug}`);
       router.refresh();
     } catch (e) {
-      const msg = (e as { message?: string }).message || "Something went wrong. Your draft is saved; try again.";
-      setSubmitError(msg);
+      const msg = (e as { message?: string }).message || "Something went wrong.";
+      setSubmitError(
+        liveAlready
+          ? `Your ad is live, but we couldn't finish saving everything (${msg}). Tap Publish again to retry; it won't post a duplicate.`
+          : `${msg} Your draft is saved, so you can try again.`,
+      );
       setPublishing(false);
     }
   };
@@ -257,9 +285,6 @@ export function SellWizard({
       .sort((a, b) => (a.group === b.group ? 0 : a.group === "Popular" ? -1 : 1));
     return [...list, { value: OTHER, label: "Other model", hint: "Not listed" }];
   }, [catalog.models, d.make_id, d.vehicle_type]);
-
-  const [makeOther, setMakeOther] = useState(!!d.make_other && !d.make_id);
-  const [modelOther, setModelOther] = useState(!!d.model_other && !d.model_id);
 
   // Card preview of the ad being built.
   const preview: Card = {
@@ -314,7 +339,17 @@ export function SellWizard({
                 aria-checked={on}
                 onClick={() => {
                   if (on) return;
-                  setD((prev) => ({ ...prev, vehicle_type: t.slug, make_id: null, model_id: null, body_type: null, transmission: NO_TRANSMISSION.includes(t.slug) ? null : prev.transmission }));
+                  setD((prev) => ({
+                    ...prev,
+                    vehicle_type: t.slug,
+                    make_id: null,
+                    make_other: "",
+                    model_id: null,
+                    model_other: "",
+                    body_type: null,
+                    transmission: NO_TRANSMISSION.includes(t.slug) ? null : prev.transmission,
+                    features: ["motorbike", "heavy-duty"].includes(t.slug) ? [] : prev.features,
+                  }));
                   setMakeOther(false);
                   setModelOther(false);
                   setErrors((e) => ({ ...e, vehicle_type: undefined }));
@@ -344,7 +379,7 @@ export function SellWizard({
             onChange={(v) => {
               setMakeOther(v === OTHER);
               setModelOther(false);
-              setD((prev) => ({ ...prev, make_id: v && v !== OTHER ? Number(v) : null, model_id: null, make_other: v === OTHER ? prev.make_other : "" }));
+              setD((prev) => ({ ...prev, make_id: v && v !== OTHER ? Number(v) : null, model_id: null, make_other: v === OTHER ? prev.make_other : "", model_other: "" }));
               setErrors((e) => ({ ...e, make_id: undefined }));
             }}
           />
@@ -379,7 +414,7 @@ export function SellWizard({
           value={d.condition}
           invalid={!!errors.condition}
           onChange={(v) => {
-            setD((prev) => ({ ...prev, condition: v, year_registered: v === "used" ? prev.year_registered : "", previous_owners: v === "used" ? prev.previous_owners : "", mileage_km: v === "brand_new" ? "" : prev.mileage_km }));
+            setD((prev) => ({ ...prev, condition: v, year_registered: v === "used" ? prev.year_registered : "", previous_owners: v === "used" ? prev.previous_owners : "", mileage_km: v === "brand_new" || (prev.condition === "brand_new" && Number(prev.mileage_km) === 0) ? "" : prev.mileage_km }));
             setErrors((e) => ({ ...e, condition: undefined }));
           }}
           options={CONDITIONS.map((c) => ({ value: c.value, label: c.label, hint: c.hint }))}
@@ -627,10 +662,23 @@ export function SellWizard({
         </Field>
       </div>
       <div className="space-y-3 rounded-2xl border border-border p-4">
-        <Switch checked={d.whatsapp_same} onChange={(v) => set("whatsapp_same", v)} label="Buyers can WhatsApp this number" />
-        {!d.whatsapp_same && (
-          <Field label="WhatsApp number" htmlFor="sell-wa" error={errors.whatsapp} optional>
-            <Input id="sell-wa" type="tel" inputMode="tel" value={d.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="Leave blank for none" />
+        <div>
+          <p className="mb-2 text-[15px] font-medium">WhatsApp</p>
+          <ChoiceChips
+            name="whatsapp_mode"
+            size="sm"
+            value={d.whatsapp_mode}
+            onChange={(v) => v && set("whatsapp_mode", v as Draft["whatsapp_mode"])}
+            options={[
+              { value: "same", label: "Same number" },
+              { value: "other", label: "Different number" },
+              { value: "none", label: "No WhatsApp" },
+            ]}
+          />
+        </div>
+        {d.whatsapp_mode === "other" && (
+          <Field label="WhatsApp number" htmlFor="sell-wa" error={errors.whatsapp}>
+            <Input id="sell-wa" type="tel" inputMode="tel" value={d.whatsapp} aria-invalid={!!errors.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="077 123 4567" />
           </Field>
         )}
         <Switch checked={saveContact} onChange={setSaveContact} label="Remember these numbers for my next ad" />
@@ -638,6 +686,7 @@ export function SellWizard({
     </div>
   );
 
+  const donePhotos = d.photos.filter((p) => p.status === "done").length;
   const summary: { step: number; rows: [string, string | null | undefined][] }[] = [
     {
       step: 0,
@@ -659,7 +708,7 @@ export function SellWizard({
         ["Features", d.features.length ? `${d.features.length} selected` : null],
       ],
     },
-    { step: 2, rows: [["Photos", d.photos.length ? `${d.photos.length} photo${d.photos.length === 1 ? "" : "s"}` : "None yet"]] },
+    { step: 2, rows: [["Photos", donePhotos ? `${donePhotos} photo${donePhotos === 1 ? "" : "s"}` : "None yet"]] },
     {
       step: 3,
       rows: [
@@ -750,7 +799,8 @@ export function SellWizard({
                   disabled={!enabled}
                   onClick={() => goto(i)}
                   aria-current={state === "current" ? "step" : undefined}
-                  className="group block w-full text-left disabled:cursor-default"
+                  aria-label={`Step ${i + 1}: ${s.title}${state === "done" ? " (done)" : ""}`}
+                  className="group block w-full py-2.5 text-left disabled:cursor-default"
                 >
                   <span className={cn("block h-1.5 rounded-full transition-colors", state === "todo" ? "bg-surface-3" : "bg-brand", enabled && "group-hover:opacity-80")} />
                   <span className={cn("mt-2 hidden text-[13px] font-semibold sm:block", state === "current" ? "text-fg" : state === "done" ? "text-fg-muted" : "text-fg-subtle")}>{s.title}</span>
@@ -791,7 +841,7 @@ export function SellWizard({
               <div>
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-fg-subtle">Preview</p>
                 <div inert className="pointer-events-none">
-                  {mounted ? <ListingCard l={preview} /> : <div className="skeleton aspect-[4/5] rounded-2xl" />}
+                  {mounted ? <ListingCard l={preview} preview /> : <div className="skeleton aspect-[4/5] rounded-2xl" />}
                 </div>
               </div>
               <div className="rounded-2xl border border-border bg-surface p-4">

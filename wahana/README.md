@@ -11,6 +11,10 @@ A vehicle marketplace for Sri Lanka: buy, sell and price cars, SUVs, vans, bikes
 - Ad page with a swipeable photo gallery and full-screen viewer, key specs, and a **price check** chart showing where the price sits among similar live ads. It also has price history, a leasing estimate, safety tips and similar vehicles.
 - A tap reveals the seller's number, with Call and WhatsApp buttons. In-app chat comes with quick replies, live updates, unread badges and read receipts.
 - Saved ads (they work signed out and sync when you sign in), plus saved searches showing what's new since your last visit.
+- **Compare** up to three vehicles side by side (`/compare?ids=…`), with the best value in each row highlighted and a feature-by-feature matrix.
+- **Make an offer**: buyers can attach an offer to their first message or send one from the chat. Offers show as cards with how far they are from the asking price.
+- **Recently viewed** ads on the home and ad pages, **price drops** on saved ads ("Rs 200K cheaper since you saved it"), and a "More from this seller" rail.
+- **Share previews**: links pasted into WhatsApp or Facebook show the photo, price and price rating (`/og/ad/[id]`), plus a one-tap "Share on WhatsApp" button.
 - Tools: "What's my vehicle worth?", a leasing calculator, a dealer directory and a safety guide.
 
 **Sellers**
@@ -24,7 +28,7 @@ A vehicle marketplace for Sri Lanka: buy, sell and price cars, SUVs, vans, bikes
 **Staff**
 - `/admin` moderation queue: ads with 3 or more reports are hidden automatically and can be restored or removed here.
 
-Light and dark themes follow the device. The app works in any modern browser and can be installed as a PWA.
+Light and dark themes follow the device, and the whole site passes automated WCAG 2.1 AA checks (axe-core) on phone and desktop, in both themes. Loading skeletons keep slow connections feeling responsive. The app works in any modern browser and can be installed as a PWA.
 
 ## Stack
 
@@ -46,6 +50,11 @@ npm run typecheck
 ```
 
 `.env` holds only public values: the project URL and the publishable key, which is designed to ship to browsers. Row-level security protects the data. For production, set `NEXT_PUBLIC_SITE_URL` to your real domain.
+
+## Before launch
+
+- Set `NEXT_PUBLIC_SUPPORT_EMAIL` (and optionally `NEXT_PUBLIC_OPERATOR`, your registered business name) in `.env` or your host. They appear on the About, Terms, Privacy and Refund pages, which PayHere checks during merchant approval.
+- Have a lawyer review `/terms`, `/privacy` and `/refunds`. They're written in plain language for this marketplace but aren't legal advice.
 
 ## Supabase settings to change before launch
 
@@ -85,6 +94,9 @@ app/
   messages/, messages/[id]/    inbox and realtime chat
   account/                     my ads, saved, saved searches, profile, promote/[id]
   dealers/, value/, leasing/, safety/, admin/
+  compare/                     side-by-side comparison
+  about/, terms/, privacy/, refunds/
+  og/ad/[id]/                  social share image for an ad
   auth/callback, auth/signout  email links and sign-out
   api/catalog, api/cities      cached reference data for client components
   sitemap.ts, robots.ts, manifest.ts

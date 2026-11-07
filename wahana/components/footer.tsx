@@ -58,7 +58,12 @@ export function Footer() {
       <div className="border-t border-border">
         <div className="container-page flex flex-col gap-2 py-5 text-xs text-fg-subtle sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} {site.name}. Prices in Sri Lankan rupees.</p>
-          <p>Price ratings compare each ad with similar live ads of the same model, condition and year.</p>
+          <nav aria-label="Legal" className="flex flex-wrap gap-x-4">
+            <Link href="/about" className="inline-flex min-h-6 items-center hover:text-fg">About and contact</Link>
+            <Link href="/terms" className="inline-flex min-h-6 items-center hover:text-fg">Terms</Link>
+            <Link href="/privacy" className="inline-flex min-h-6 items-center hover:text-fg">Privacy</Link>
+            <Link href="/refunds" className="inline-flex min-h-6 items-center hover:text-fg">Refunds</Link>
+          </nav>
         </div>
       </div>
     </footer>

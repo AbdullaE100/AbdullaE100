@@ -22,7 +22,7 @@ const QUICK = [
 function CountDot({ n, className }: { n: number; className?: string }) {
   if (!n) return null;
   return (
-    <span className={cn("absolute -right-0.5 -top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-danger px-1 text-[11px] font-bold leading-none text-white ring-2 ring-surface", className)}>
+    <span className={cn("absolute -right-0.5 -top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-danger-solid px-1 text-[11px] font-bold leading-none text-white ring-2 ring-surface", className)}>
       {n > 9 ? "9+" : n}
     </span>
   );
@@ -115,7 +115,7 @@ export function Header() {
         {!focused && <SearchBox key={q} defaultValue={q} className="hidden max-w-xl flex-1 md:block" />}
         <div className="flex-1 md:hidden" />
         {focused && <div className="hidden flex-1 md:block" />}
-        <nav className="flex items-center gap-1" aria-label="Account">
+        <nav className="flex items-center gap-1" aria-label="Shortcuts">
           {!focused && (
             <button
               type="button"

@@ -79,9 +79,22 @@ export function PromotePicker({ listingId, products }: { listingId: number; prod
         })}
       </div>
       <div className="mt-6 flex flex-col items-stretch gap-3 rounded-2xl border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="flex items-center gap-2 text-sm text-fg-muted">
-          <Lock className="size-4" /> Pay securely by card, eZ Cash or mCash through PayHere.
-        </p>
+        <div className="text-sm text-fg-muted">
+          <p className="flex items-center gap-2">
+            <Lock className="size-4" /> Pay securely by card, eZ Cash or mCash through PayHere.
+          </p>
+          <p className="mt-1 text-xs">
+            By paying you agree to our{" "}
+            <a href="/terms" className="font-medium underline">
+              terms
+            </a>{" "}
+            and{" "}
+            <a href="/refunds" className="font-medium underline">
+              refund policy
+            </a>
+            .
+          </p>
+        </div>
         <Button size="lg" onClick={pay} loading={busy} disabled={!product}>
           Pay {product ? formatLKR(product.price_lkr) : ""}
         </Button>

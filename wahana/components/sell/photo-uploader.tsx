@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import { ImagePlus, Star, X, ChevronLeft, ChevronRight, AlertCircle, RotateCcw, Camera } from "lucide-react";
-import { processImage, uploadImage } from "@/lib/photos";
+import { processImage, removeImages, uploadImage } from "@/lib/photos";
 import { photoUrl } from "@/lib/env";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/cn";
@@ -71,7 +71,14 @@ export function PhotoUploader({
     });
 
   const makeCover = (key: string) => onChange((all) => [...all.filter((x) => x.key === key), ...all.filter((x) => x.key !== key)]);
-  const remove = (key: string) => onChange((all) => all.filter((x) => x.key !== key));
+  const remove = (key: string) => {
+    const p = photos.find((x) => x.key === key);
+    // Fresh uploads aren't linked to an ad yet, so their files can go now.
+    // Existing photos are only deleted when the seller saves.
+    if (p && !p.id && p.path) removeImages([p.path, p.thumb_path].filter(Boolean) as string[]).catch(() => {});
+    if (p?.preview) URL.revokeObjectURL(p.preview);
+    onChange((all) => all.filter((x) => x.key !== key));
+  };
 
   const full = photos.length >= MAX_PHOTOS;
 

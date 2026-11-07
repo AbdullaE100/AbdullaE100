@@ -1,11 +1,12 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowLeft, SendHorizontal, ShieldAlert, RotateCcw } from "lucide-react";
+import { ArrowLeft, SendHorizontal, ShieldAlert, RotateCcw, HandCoins, X } from "lucide-react";
 import { useInbox, useSession } from "@/app/providers";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { photoUrl } from "@/lib/env";
-import { formatDate, formatLKR, formatTime } from "@/lib/format";
+import { dayKey, formatDate, formatLKR, formatLakhs, formatTime } from "@/lib/format";
+import { formatOffer, parseOffer } from "@/lib/offer";
 import { VehiclePlaceholder } from "@/components/vehicle-art";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/cn";
@@ -13,14 +14,10 @@ import { cn } from "@/lib/cn";
 type Msg = { id: number; sender_id: string; body: string; created_at: string; failed?: boolean; pending?: boolean };
 type Listing = { id: number; slug: string; title: string; price_lkr: number; cover_thumb: string | null; vehicle_type: string; status: string } | null;
 
-const dayKey = (d: string) => new Date(d).toDateString();
 function dayLabel(d: string) {
-  const date = new Date(d);
-  const today = new Date();
-  const y = new Date();
-  y.setDate(today.getDate() - 1);
-  if (date.toDateString() === today.toDateString()) return "Today";
-  if (date.toDateString() === y.toDateString()) return "Yesterday";
+  const k = dayKey(d);
+  if (k === dayKey(Date.now())) return "Today";
+  if (k === dayKey(Date.now() - 86_400_000)) return "Yesterday";
   return formatDate(d);
 }
 
@@ -30,6 +27,9 @@ export function Thread({ id, other, role, listing, initial }: { id: string; othe
   const { refresh } = useInbox();
   const [msgs, setMsgs] = useState<Msg[]>(initial);
   const [body, setBody] = useState("");
+  const [offerOpen, setOfferOpen] = useState(false);
+  const [offer, setOffer] = useState("");
+  const offerAmount = Number(offer.replace(/\D/g, "")) || 0;
   const scroller = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const tempId = useRef(-1);
@@ -46,27 +46,54 @@ export function Thread({ id, other, role, listing, initial }: { id: string; othe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  // Merge messages from the server into local state, swapping out our own
+  // optimistic copies and ignoring ones we already have.
+  const merge = (incoming: Msg[]) => {
+    if (!incoming.length) return;
+    setMsgs((all) => {
+      let next = all;
+      for (const m of incoming) {
+        if (next.some((x) => x.id === m.id)) continue;
+        const i = next.findIndex((x) => x.pending && x.sender_id === m.sender_id && x.body === m.body);
+        next = i >= 0 ? next.map((x, j) => (j === i ? m : x)) : [...next, m];
+      }
+      return next;
+    });
+    if (incoming.some((m) => m.sender_id !== me)) markRead();
+  };
+
+  const latest = useRef(msgs);
+  useEffect(() => {
+    latest.current = msgs;
+  }, [msgs]);
+
+  // Catch up on anything sent while the socket was connecting or the phone slept.
+  const catchUp = async () => {
+    const lastId = latest.current.reduce((max, m) => (m.id > max ? m.id : max), 0);
+    const { data } = await supabaseBrowser()
+      .from("messages")
+      .select("id, sender_id, body, created_at")
+      .eq("conversation_id", id)
+      .gt("id", lastId)
+      .order("id")
+      .limit(200);
+    merge((data ?? []) as Msg[]);
+  };
+
   useEffect(() => {
     const db = supabaseBrowser();
     const ch = db
       .channel(`thread:${id}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${id}` }, (payload) => {
-        const m = payload.new as Msg;
-        setMsgs((all) => {
-          if (all.some((x) => x.id === m.id)) return all;
-          // Replace our optimistic copy if this is our own message.
-          const i = all.findIndex((x) => x.pending && x.sender_id === m.sender_id && x.body === m.body);
-          if (i >= 0) {
-            const next = [...all];
-            next[i] = m;
-            return next;
-          }
-          return [...all, m];
-        });
-        if (m.sender_id !== me) markRead();
-      })
-      .subscribe();
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${id}` }, (payload) => merge([payload.new as Msg]))
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") catchUp();
+      });
+    const onVisible = () => document.visibilityState === "visible" && catchUp();
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("online", onVisible);
     return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("online", onVisible);
       db.removeChannel(ch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -122,7 +149,7 @@ export function Thread({ id, other, role, listing, initial }: { id: string; othe
         </Link>
       )}
 
-      <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-bg px-3 py-4 sm:px-5" aria-live="polite">
+      <div ref={scroller} tabIndex={0} aria-label="Conversation" className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-bg px-3 py-4 focus-visible:outline-offset-[-2px] sm:px-5" aria-live="polite">
         <div className="mx-auto mb-4 flex max-w-md items-start gap-2 rounded-2xl bg-accent-soft px-3.5 py-2.5 text-[13px] text-accent-fg">
           <ShieldAlert className="mt-0.5 size-4 shrink-0" />
           <p>Never send money before you&apos;ve seen the vehicle and checked its papers. We&apos;ll never ask you for a payment in chat.</p>
@@ -152,7 +179,25 @@ export function Thread({ id, other, role, listing, initial }: { id: string; othe
                       m.failed && "bg-danger-soft text-danger",
                     )}
                   >
-                    {m.body}
+                    {(() => {
+                      const o = parseOffer(m.body);
+                      if (!o) return m.body;
+                      const pct = listing?.price_lkr ? Math.round(((listing.price_lkr - o.amount) / listing.price_lkr) * 100) : null;
+                      return (
+                        <span className="block min-w-44">
+                          <span className={cn("flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide", mine ? "text-white/90" : "text-accent-fg")}>
+                            <HandCoins className="size-4" /> {mine ? "Your offer" : "Offer"}
+                          </span>
+                          <span className="tabular mt-0.5 block text-xl font-extrabold">{formatLKR(o.amount)}</span>
+                          {pct != null && pct !== 0 && (
+                            <span className={cn("block text-xs", mine ? "text-white/90" : "text-fg-muted")}>
+                              {Math.abs(pct)}% {pct > 0 ? "below" : "above"} the {formatLKR(listing!.price_lkr)} asking price
+                            </span>
+                          )}
+                          {o.note && <span className="mt-1.5 block">{o.note}</span>}
+                        </span>
+                      );
+                    })()}
                   </div>
                   {lastOfRun && (
                     <p className={cn("mt-1 px-1 text-[11px] text-fg-subtle", mine && "text-right")}>
@@ -181,7 +226,55 @@ export function Thread({ id, other, role, listing, initial }: { id: string; othe
           send(body);
         }}
       >
+        {offerOpen && (
+          <div className="mb-2.5 flex items-center gap-2 rounded-2xl border border-accent/40 bg-accent-soft/60 p-2">
+            <HandCoins className="ml-1 size-5 shrink-0 text-accent-fg" aria-hidden />
+            <label htmlFor="offer-amount" className="sr-only">
+              Offer amount in rupees
+            </label>
+            <div className="relative min-w-0 flex-1">
+              <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm font-semibold text-fg-muted">Rs</span>
+              <input
+                id="offer-amount"
+                inputMode="numeric"
+                autoFocus
+                value={offerAmount ? offerAmount.toLocaleString("en-LK") : ""}
+                onChange={(e) => setOffer(e.target.value)}
+                placeholder={listing ? Math.round(listing.price_lkr * 0.95).toLocaleString("en-LK") : "Amount"}
+                className="h-10 w-full rounded-xl border border-border bg-surface pl-10 pr-3 text-[15px] focus:border-brand focus:outline-none focus:ring-4 focus:ring-[var(--ring)]"
+              />
+            </div>
+            <button
+              type="button"
+              disabled={offerAmount < 10_000}
+              onClick={() => {
+                send(formatOffer(offerAmount, body));
+                setOffer("");
+                setBody("");
+                setOfferOpen(false);
+              }}
+              className="h-10 shrink-0 rounded-xl bg-brand px-4 text-sm font-semibold text-brand-fg hover:bg-brand-hover disabled:opacity-40"
+            >
+              Send offer
+            </button>
+            <button type="button" onClick={() => setOfferOpen(false)} className="grid size-10 shrink-0 place-items-center rounded-xl text-fg-muted hover:bg-surface" aria-label="Cancel offer">
+              <X className="size-4" />
+            </button>
+          </div>
+        )}
+        {offerOpen && offerAmount > 0 && <p className="-mt-1 mb-2 px-2 text-xs text-fg-muted">{formatLakhs(offerAmount)}. Anything you type below is sent with the offer.</p>}
         <div className="flex items-end gap-2">
+          {role === "buyer" && !offerOpen && listing?.status === "active" && (
+            <button
+              type="button"
+              onClick={() => setOfferOpen(true)}
+              className="grid size-11 shrink-0 place-items-center rounded-full border border-border text-fg-muted hover:bg-surface-2 hover:text-fg"
+              aria-label="Make an offer"
+              title="Make an offer"
+            >
+              <HandCoins className="size-5" />
+            </button>
+          )}
           <label htmlFor="composer" className="sr-only">
             Message
           </label>
@@ -190,7 +283,7 @@ export function Thread({ id, other, role, listing, initial }: { id: string; othe
             ref={input}
             rows={1}
             value={body}
-            maxLength={2000}
+            maxLength={1900}
             onChange={(e) => {
               setBody(e.target.value);
               e.target.style.height = "auto";

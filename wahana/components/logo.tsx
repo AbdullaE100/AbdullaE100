@@ -14,7 +14,7 @@ export function LogoMark({ className }: { className?: string }) {
 
 export function Logo({ className }: { className?: string }) {
   return (
-    <Link href="/" className={cn("flex shrink-0 items-center gap-2 rounded-lg", className)} aria-label={`${site.name} home`}>
+    <Link href="/" className={cn("flex shrink-0 items-center gap-2 rounded-lg", className)}>
       <LogoMark />
       <span className="font-display text-[19px] font-extrabold tracking-tight">
         {site.name}

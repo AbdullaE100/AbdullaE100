@@ -20,11 +20,11 @@ export function Pagination({ page, total, pageSize, hrefFor }: { page: number; t
   return (
     <nav aria-label="Pages" className="mt-10 flex items-center justify-center gap-1">
       {page > 1 ? (
-        <Link href={hrefFor(page - 1)} rel="prev" className={cn(btn, "border border-border bg-surface hover:bg-surface-2")}>
+        <Link href={hrefFor(page - 1)} rel="prev" aria-label="Previous page" className={cn(btn, "border border-border bg-surface hover:bg-surface-2")}>
           <ChevronLeft className="size-4" /> <span className="hidden sm:inline">Previous</span>
         </Link>
       ) : (
-        <span className={cn(btn, "border border-border text-fg-subtle opacity-50")} aria-hidden>
+        <span className={cn(btn, "border border-border text-fg-subtle")} aria-hidden>
           <ChevronLeft className="size-4" /> <span className="hidden sm:inline">Previous</span>
         </span>
       )}
@@ -38,6 +38,7 @@ export function Pagination({ page, total, pageSize, hrefFor }: { page: number; t
             key={p}
             href={hrefFor(p)}
             aria-current={p === page ? "page" : undefined}
+            aria-label={`Page ${p}`}
             className={cn(btn, p === page ? "bg-fg text-bg" : "hover:bg-surface-2", Math.abs(p - page) > 1 && p !== 1 && p !== last && "hidden sm:inline-flex")}
           >
             {p}
@@ -45,11 +46,11 @@ export function Pagination({ page, total, pageSize, hrefFor }: { page: number; t
         ),
       )}
       {page < last ? (
-        <Link href={hrefFor(page + 1)} rel="next" className={cn(btn, "border border-border bg-surface hover:bg-surface-2")}>
+        <Link href={hrefFor(page + 1)} rel="next" aria-label="Next page" className={cn(btn, "border border-border bg-surface hover:bg-surface-2")}>
           <span className="hidden sm:inline">Next</span> <ChevronRight className="size-4" />
         </Link>
       ) : (
-        <span className={cn(btn, "border border-border text-fg-subtle opacity-50")} aria-hidden>
+        <span className={cn(btn, "border border-border text-fg-subtle")} aria-hidden>
           <span className="hidden sm:inline">Next</span> <ChevronRight className="size-4" />
         </span>
       )}

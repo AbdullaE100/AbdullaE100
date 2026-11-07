@@ -15,7 +15,7 @@ const variants: Record<Variant, string> = {
   outline: "border border-border-strong text-fg hover:bg-surface-2",
   soft: "bg-brand-soft text-brand-soft-fg hover:bg-brand-soft/70",
   ghost: "text-fg-muted hover:bg-surface-2 hover:text-fg",
-  danger: "bg-danger text-white shadow-sm hover:opacity-90",
+  danger: "bg-danger-solid text-white shadow-sm hover:opacity-90",
   accent: "bg-accent text-[#2a1a00] shadow-sm hover:brightness-105",
 };
 

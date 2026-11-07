@@ -41,7 +41,7 @@ export type Draft = {
   description: string;
   phone: string;
   whatsapp: string;
-  whatsapp_same: boolean;
+  whatsapp_mode: "same" | "other" | "none";
   seller_name: string;
   photos: DraftPhoto[];
   folder: string;
@@ -73,7 +73,7 @@ export const emptyDraft = (): Draft => ({
   description: "",
   phone: "",
   whatsapp: "",
-  whatsapp_same: true,
+  whatsapp_mode: "same",
   seller_name: "",
   photos: [],
   folder: typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID().slice(0, 8) : String(Date.now()),
@@ -117,6 +117,7 @@ export function validate(step: StepId, d: Draft): Errors {
   }
   if (step === "photos") {
     if (d.photos.some((p) => p.status === "processing" || p.status === "uploading")) e.photos_pending = "Wait for your photos to finish uploading.";
+    else if (d.photos.some((p) => p.status === "error")) e.photos_pending = "Some photos didn't upload. Retry or remove them to continue.";
   }
   if (step === "price") {
     const p = Number(d.price_lkr);
@@ -127,7 +128,7 @@ export function validate(step: StepId, d: Draft): Errors {
   }
   if (step === "contact") {
     if (!normalizeLkPhone(d.phone)) e.phone = "Enter a Sri Lankan mobile or landline, e.g. 077 123 4567.";
-    if (!d.whatsapp_same && d.whatsapp && !normalizeLkPhone(d.whatsapp)) e.whatsapp = "Enter a valid WhatsApp number, or leave it blank.";
+    if (d.whatsapp_mode === "other" && !normalizeLkPhone(d.whatsapp)) e.whatsapp = "Enter the WhatsApp number, e.g. 077 123 4567.";
     if (d.description.length > 5000) e.description = "Keep the description under 5,000 characters.";
   }
   return e;

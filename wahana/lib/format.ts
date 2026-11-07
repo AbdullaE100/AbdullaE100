@@ -63,9 +63,15 @@ export function timeAgo(date: string | Date | null | undefined, now = Date.now()
   return "just now";
 }
 
-const df = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" });
-const dfShort = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" });
-const tf = new Intl.DateTimeFormat("en-GB", { hour: "numeric", minute: "2-digit", hour12: true });
+// Always Sri Lanka time, so the server (UTC) and the browser render the same text.
+export const TZ = "Asia/Colombo";
+const df = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: TZ });
+const dfShort = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: TZ });
+const tf = new Intl.DateTimeFormat("en-GB", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: TZ });
+const dayKeyFmt = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: TZ });
+
+/** YYYY-MM-DD in Sri Lanka time. */
+export const dayKey = (d: string | Date | number) => dayKeyFmt.format(new Date(d));
 
 export const formatDate = (d: string | Date) => df.format(new Date(d));
 export const formatDateShort = (d: string | Date) => dfShort.format(new Date(d));

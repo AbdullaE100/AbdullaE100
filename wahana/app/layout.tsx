@@ -4,6 +4,7 @@ import { Providers, type Session } from "./providers";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { MobileNav } from "@/components/mobile-nav";
+import { CompareTray } from "@/components/compare";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { SITE_URL } from "@/lib/env";
 import { site } from "@/lib/site";
@@ -54,6 +55,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </main>
           <Footer />
           <MobileNav />
+          <CompareTray />
         </Providers>
       </body>
     </html>

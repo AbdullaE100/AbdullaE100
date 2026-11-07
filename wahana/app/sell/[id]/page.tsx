@@ -69,7 +69,7 @@ export default async function EditAdPage({ params }: { params: Promise<{ id: str
     description: l.description ?? "",
     phone: contact?.phone ? displayLkPhone(contact.phone) : defaults.phone,
     whatsapp: contact?.whatsapp ? displayLkPhone(contact.whatsapp) : "",
-    whatsapp_same: !contact?.whatsapp || contact.whatsapp === contact.phone,
+    whatsapp_mode: !contact || contact.whatsapp === contact.phone ? "same" : contact.whatsapp ? "other" : "none",
     seller_name: contact?.seller_name ?? defaults.name,
     photos: photos.map((p) => ({ key: p.id, id: p.id, status: "done", path: p.path, thumb_path: p.thumb_path ?? undefined, width: p.width ?? undefined, height: p.height ?? undefined })),
     folder: String(l.id),

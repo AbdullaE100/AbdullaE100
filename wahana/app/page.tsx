@@ -5,6 +5,7 @@ import { ListingRail, SectionHeader } from "@/components/rail";
 import { ListingCard } from "@/components/listing-card";
 import { VehicleArt } from "@/components/vehicle-art";
 import { ButtonLink } from "@/components/ui/button";
+import { RecentlyViewed } from "@/components/recently-viewed";
 import { homeSummary, searchFacets, searchListings } from "@/lib/queries";
 import { VEHICLE_TYPES, typeBySlug } from "@/lib/constants";
 import { formatNumber } from "@/lib/format";
@@ -66,6 +67,7 @@ export default async function HomePage() {
       </section>
 
       <div className="container-page space-y-14 py-10 sm:space-y-16 sm:py-14">
+        <RecentlyViewed />
         {/* Types */}
         <section aria-labelledby="types">
           <SectionHeader title={<span id="types">Browse by type</span>} />
@@ -146,18 +148,18 @@ export default async function HomePage() {
             <VehicleArt type="suv" className="w-full text-white [--art-bg:var(--brand)]" />
           </div>
           <div className="relative max-w-xl">
-            <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/80">
+            <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-white">
               <Sparkles className="size-4" /> Selling a vehicle?
             </p>
             <h2 className="mt-2 text-3xl font-extrabold sm:text-4xl">Post your ad free, priced right from day one.</h2>
-            <p className="mt-3 text-white/85">
+            <p className="mt-3 text-white">
               Add photos from your phone, and we&apos;ll show you the going rate for your model before you publish. Buyers can message you without seeing your number.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <ButtonLink href="/sell" variant="secondary" size="lg" className="border-transparent">
                 Post an ad <ArrowRight className="size-4" />
               </ButtonLink>
-              <ButtonLink href="/value" size="lg" className="bg-white/15 text-white shadow-none hover:bg-white/25">
+              <ButtonLink href="/value" size="lg" className="bg-black/25 text-white shadow-none hover:bg-black/35">
                 What&apos;s my vehicle worth?
               </ButtonLink>
             </div>

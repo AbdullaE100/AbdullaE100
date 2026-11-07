@@ -58,6 +58,7 @@ export function Results({
         <div className="mt-4 grid gap-8 lg:mt-6 lg:grid-cols-[280px_minmax(0,1fr)]">
           <aside className="hidden lg:block" aria-label="Filters">
             <div className="sticky top-[7.5rem] max-h-[calc(100dvh-8.5rem)] overflow-y-auto overscroll-contain rounded-2xl border border-border bg-surface p-5 shadow-sm">
+              <h2 className="sr-only">Filters</h2>
               <FilterPanel facets={facets} names={names} hideType={hideType} hideSeller={hideSeller} />
             </div>
           </aside>
@@ -77,6 +78,7 @@ export function Results({
               </div>
             </div>
           <PendingArea>
+            <h2 className="sr-only">Results</h2>
             {result.top.length > 0 && (
               <section aria-label="Top ads" className="mb-6 rounded-3xl border border-accent/40 bg-accent-soft/40 p-3 sm:p-4">
                 <p className="mb-3 flex items-center gap-1.5 px-1 text-sm font-semibold text-accent-fg">

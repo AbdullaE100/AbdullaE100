@@ -68,7 +68,7 @@ export default async function BrowsePage(props: Props) {
                     {c.label}
                   </span>
                 ) : (
-                  <Link href={c.href} className="hover:text-fg hover:underline">
+                  <Link href={c.href} className="inline-flex min-h-7 items-center hover:text-fg hover:underline">
                     {c.label}
                   </Link>
                 )}

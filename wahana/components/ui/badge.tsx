@@ -11,7 +11,7 @@ const tones: Record<Tone, string> = {
   accent: "bg-accent-soft text-accent-fg",
   danger: "bg-danger-soft text-danger",
   "solid-accent": "bg-accent text-[#2a1a00]",
-  "solid-danger": "bg-danger text-white",
+  "solid-danger": "bg-danger-solid text-white",
   glass: "bg-black/55 text-white backdrop-blur-sm",
 };
 

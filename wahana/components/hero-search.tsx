@@ -71,7 +71,7 @@ export function HeroSearch({ counts }: { counts: Record<string, number> }) {
             >
               <VehicleArt type={slug} className={cn("h-4 w-8", on ? "[--art-bg:var(--brand-soft)]" : "[--art-bg:var(--surface)]")} />
               {t.short}
-              {counts[slug] ? <span className="tabular text-xs font-medium opacity-70">{formatNumber(counts[slug])}</span> : null}
+              {counts[slug] ? <span className="tabular text-xs font-medium">{formatNumber(counts[slug])}</span> : null}
             </button>
           );
         })}

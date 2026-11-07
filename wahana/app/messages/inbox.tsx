@@ -7,6 +7,7 @@ import { useSession } from "@/app/providers";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { photoUrl } from "@/lib/env";
 import { formatLKR, timeAgo } from "@/lib/format";
+import { parseOffer } from "@/lib/offer";
 import type { ConversationSummary } from "@/lib/conversations";
 import { VehiclePlaceholder } from "@/components/vehicle-art";
 import { ButtonLink } from "@/components/ui/button";
@@ -28,7 +29,7 @@ function Item({ c, active }: { c: ConversationSummary; active: boolean }) {
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline justify-between gap-2">
             <span className={cn("truncate text-[15px]", c.unread ? "font-bold" : "font-semibold")}>{c.other}</span>
-            <time className={cn("shrink-0 text-xs", c.unread ? "font-semibold text-brand-text" : "text-fg-subtle")}>{timeAgo(c.lastAt)}</time>
+            <time suppressHydrationWarning className={cn("shrink-0 text-xs", c.unread ? "font-semibold text-brand-text" : "text-fg-subtle")}>{timeAgo(c.lastAt)}</time>
           </span>
           <span className="block truncate text-[13px] text-fg-muted">
             {c.role === "seller" ? "Your ad · " : ""}
@@ -37,7 +38,10 @@ function Item({ c, active }: { c: ConversationSummary; active: boolean }) {
           <span className="mt-0.5 flex items-center gap-2">
             <span className={cn("truncate text-sm", c.unread ? "font-medium text-fg" : "text-fg-subtle")}>
               {c.mineLast && "You: "}
-              {c.preview}
+              {(() => {
+                const o = c.preview ? parseOffer(c.preview) : null;
+                return o ? `Offer of ${formatLKR(o.amount)}` : c.preview;
+              })()}
             </span>
             {c.unread && <span className="ml-auto size-2.5 shrink-0 rounded-full bg-brand" aria-label="Unread" />}
           </span>

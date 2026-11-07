@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { createContext, useCallback, useContext, useTransition, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { filtersToHref, withFilter, type Filters } from "@/lib/search";
 import { cn } from "@/lib/cn";
 
@@ -24,6 +24,14 @@ export function useSearch() {
 export function SearchProvider({ filters, base = null, children }: { filters: Filters; base?: string | null; children: ReactNode }) {
   const router = useRouter();
   const [pending, start] = useTransition();
+  // What the user has asked for, ahead of the server catching up. Each change
+  // builds on this, so quick taps don't overwrite one another.
+  const [current, setCurrent] = useState(filters);
+  const latest = useRef(filters);
+  useEffect(() => {
+    latest.current = filters;
+    setCurrent(filters);
+  }, [filters]);
 
   const href = useCallback(
     (f: Filters) => {
@@ -38,14 +46,16 @@ export function SearchProvider({ filters, base = null, children }: { filters: Fi
 
   const replace = useCallback(
     (f: Filters) => {
+      latest.current = f;
+      setCurrent(f);
       start(() => router.push(href(f), { scroll: false }));
     },
     [router, href],
   );
 
-  const apply = useCallback((patch: Partial<Filters>) => replace(withFilter(filters, patch)), [filters, replace]);
+  const apply = useCallback((patch: Partial<Filters>) => replace(withFilter(latest.current, patch)), [replace]);
 
-  return <SearchCtx.Provider value={{ filters, pending, apply, replace, base, href }}>{children}</SearchCtx.Provider>;
+  return <SearchCtx.Provider value={{ filters: current, pending, apply, replace, base, href }}>{children}</SearchCtx.Provider>;
 }
 
 export function PendingArea({ children, className }: { children: ReactNode; className?: string }) {

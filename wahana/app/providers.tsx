@@ -3,14 +3,23 @@ import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { ToastProvider, useToast } from "@/components/ui/toast";
+import { CompareProvider } from "@/components/compare";
 
 export type Session = { userId: string; name: string | null; email: string | null; isStaff: boolean } | null;
 
 const SessionContext = createContext<Session>(null);
 export const useSession = () => useContext(SessionContext);
 
-type FavCtx = { ids: number[]; has: (id: number) => boolean; toggle: (id: number) => void; ready: boolean };
-const FavContext = createContext<FavCtx>({ ids: [], has: () => false, toggle: () => {}, ready: false });
+type FavCtx = {
+  ids: number[];
+  /** When each ad was saved (signed-in users only). */
+  savedAt: Record<number, string>;
+  has: (id: number) => boolean;
+  toggle: (id: number) => void;
+  removeMany: (ids: number[]) => void;
+  ready: boolean;
+};
+const FavContext = createContext<FavCtx>({ ids: [], savedAt: {}, has: () => false, toggle: () => {}, removeMany: () => {}, ready: false });
 export const useFavourites = () => useContext(FavContext);
 
 type InboxCtx = { unread: number; refresh: () => void };
@@ -50,9 +59,16 @@ function AuthListener() {
 function FavouritesProvider({ children }: { children: ReactNode }) {
   const session = useSession();
   const { toast } = useToast();
-  const [ids, setIds] = useState<number[]>([]);
+  const [ids, setIdsState] = useState<number[]>([]);
+  const [savedAt, setSavedAt] = useState<Record<number, string>>({});
   const [ready, setReady] = useState(false);
   const userId = session?.userId;
+  // Always read and write through the ref so quick successive changes compose.
+  const latest = useRef<number[]>([]);
+  const setIds = useCallback((next: number[]) => {
+    latest.current = next;
+    setIdsState(next);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -66,32 +82,31 @@ function FavouritesProvider({ children }: { children: ReactNode }) {
         return;
       }
       const db = supabaseBrowser();
-      // Carry over anything saved before signing in.
+      // Carry over anything saved before signing in, one by one so a single
+      // bad id (e.g. a deleted ad) can't drop the rest. Keep whatever fails.
       if (local.length) {
-        await db.from("favourites").upsert(
-          local.map((listing_id) => ({ user_id: userId, listing_id })),
-          { onConflict: "user_id,listing_id", ignoreDuplicates: true },
-        );
-        writeLocal([]);
+        const results = await Promise.all(local.map((listing_id) => db.from("favourites").insert({ user_id: userId, listing_id })));
+        writeLocal(local.filter((_, i) => results[i].error && results[i].error!.code !== "23505" && results[i].error!.code !== "23503"));
       }
-      const { data } = await db.from("favourites").select("listing_id").order("created_at", { ascending: false }).limit(500);
+      const { data } = await db.from("favourites").select("listing_id, created_at").order("created_at", { ascending: false }).limit(500);
       if (!cancelled) {
         setIds((data ?? []).map((r) => r.listing_id));
+        setSavedAt(Object.fromEntries((data ?? []).map((r) => [r.listing_id, r.created_at])));
         setReady(true);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, setIds]);
 
   const toggle = useCallback(
     (id: number) => {
-      const on = !ids.includes(id);
-      const next = on ? [id, ...ids] : ids.filter((x) => x !== id);
-      setIds(next);
+      const before = latest.current;
+      const on = !before.includes(id);
+      setIds(on ? [id, ...before] : before.filter((x) => x !== id));
       if (!userId) {
-        writeLocal(next);
+        writeLocal(latest.current);
         if (on)
           toast({
             title: "Saved on this device",
@@ -100,23 +115,41 @@ function FavouritesProvider({ children }: { children: ReactNode }) {
           });
         return;
       }
+      if (on) setSavedAt((m) => ({ ...m, [id]: new Date().toISOString() }));
       const db = supabaseBrowser();
       const req = on
         ? db.from("favourites").insert({ user_id: userId, listing_id: id })
         : db.from("favourites").delete().eq("user_id", userId).eq("listing_id", id);
       req.then(({ error }) => {
         if (error && error.code !== "23505") {
-          setIds(ids);
+          // Undo just this change, keeping any made since.
+          setIds(on ? latest.current.filter((x) => x !== id) : [id, ...latest.current.filter((x) => x !== id)]);
           toast({ tone: "error", title: "Couldn't update saved ads", body: "Check your connection and try again." });
         } else if (on) {
           toast({ tone: "success", title: "Saved", action: { label: "View saved", href: "/account/saved" } });
         }
       });
     },
-    [ids, userId, toast],
+    [userId, toast, setIds],
   );
 
-  const value = useMemo(() => ({ ids, has: (id: number) => ids.includes(id), toggle, ready }), [ids, toggle, ready]);
+  const removeMany = useCallback(
+    (remove: number[]) => {
+      if (!remove.length) return;
+      const drop = new Set(remove);
+      setIds(latest.current.filter((x) => !drop.has(x)));
+      if (!userId) return writeLocal(latest.current);
+      supabaseBrowser()
+        .from("favourites")
+        .delete()
+        .eq("user_id", userId)
+        .in("listing_id", remove)
+        .then(({ error }) => error && toast({ tone: "error", title: "Couldn't update saved ads" }));
+    },
+    [userId, toast, setIds],
+  );
+
+  const value = useMemo(() => ({ ids, savedAt, has: (id: number) => ids.includes(id), toggle, removeMany, ready }), [ids, savedAt, toggle, removeMany, ready]);
   return <FavContext.Provider value={value}>{children}</FavContext.Provider>;
 }
 
@@ -164,7 +197,9 @@ export function Providers({ session, children }: { session: Session; children: R
       <ToastProvider>
         <AuthListener />
         <FavouritesProvider>
-          <InboxProvider>{children}</InboxProvider>
+          <CompareProvider>
+            <InboxProvider>{children}</InboxProvider>
+          </CompareProvider>
         </FavouritesProvider>
       </ToastProvider>
     </SessionContext.Provider>

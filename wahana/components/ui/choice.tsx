@@ -64,7 +64,7 @@ export function ChoiceChips<T extends string>({
             >
               {on && multiple && <Check className="size-3.5" />}
               {o.label}
-              {o.count != null && <span className={cn("tabular text-xs", on ? "opacity-80" : "text-fg-subtle")}>{o.count}</span>}
+              {o.count != null && <span className={cn("tabular text-xs", on ? "" : "text-fg-subtle")}>{o.count}</span>}
             </span>
           </label>
         );

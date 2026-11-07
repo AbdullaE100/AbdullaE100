@@ -12,7 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     db.from("listings").select("id, slug, updated_at").eq("status", "active").order("bumped_at", { ascending: false }).limit(20000),
   ]);
   const now = new Date();
-  const fixed = ["", "/vehicles", "/value", "/leasing", "/dealers", "/safety", ...VEHICLE_TYPES.map((t) => `/${t.path}`)].map((p) => ({
+  const fixed = ["", "/vehicles", "/value", "/leasing", "/dealers", "/safety", "/about", "/terms", "/privacy", "/refunds", ...VEHICLE_TYPES.map((t) => `/${t.path}`)].map((p) => ({
     url: `${SITE_URL}${p}`,
     lastModified: now,
     changeFrequency: "daily" as const,

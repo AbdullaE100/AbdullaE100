@@ -175,7 +175,7 @@ export function AuthForm({ next = "/", initialMode = "signin", compact }: { next
             <div className="flex items-baseline justify-between">
               <Label htmlFor="auth-password">Password</Label>
               {mode === "signin" && (
-                <button type="button" onClick={() => setMode("reset")} className="mb-1.5 text-sm font-medium text-brand-text hover:underline">
+                <button type="button" onClick={() => setMode("reset")} className="-my-1 mb-0.5 inline-flex min-h-7 items-center px-1 text-sm font-medium text-brand-text hover:underline">
                   Forgot it?
                 </button>
               )}

@@ -14,26 +14,38 @@ import { useToast } from "@/components/ui/toast";
 
 type Row = { id: string; label: string; query: string; last_checked_at: string; created_at: string };
 
-function filtersFromQuery(query: string) {
+/** Turn a saved URL back into search_listings params (handles dealer pages too). */
+async function rpcFromQuery(query: string): Promise<Record<string, unknown> | null> {
   const url = new URL(query, "https://x.local");
-  const [type, ...rest] = url.pathname.split("/").filter(Boolean);
-  return parseFilters(type ?? "vehicles", rest, url.searchParams);
+  const [first, ...rest] = url.pathname.split("/").filter(Boolean);
+  if (first === "dealers" && rest[0]) {
+    const f = parseFilters("vehicles", [], url.searchParams);
+    if (!f) return null;
+    for (const k of ["type", "make", "model"] as const) {
+      const v = url.searchParams.get(k);
+      if (v && /^[a-z0-9-]{1,60}$/.test(v)) f[k] = v;
+    }
+    const { data } = await supabaseBrowser().from("profiles").select("id").eq("dealer_slug", rest[0]).maybeSingle();
+    return data ? filtersToRpc({ ...f, sort: undefined, page: undefined }, { seller: data.id, page_size: 48 }) : null;
+  }
+  const f = parseFilters(first ?? "vehicles", rest, url.searchParams);
+  return f ? filtersToRpc({ ...f, sort: undefined, page: undefined }, { page_size: 48 }) : null;
 }
 
 export function SavedSearches({ initial }: { initial: Row[] }) {
   const router = useRouter();
   const { toast } = useToast();
   const [rows, setRows] = useState(initial);
-  const [stats, setStats] = useState<Record<string, { total: number; fresh: number }>>({});
+  const [stats, setStats] = useState<Record<string, { total: number; fresh: number } | "unavailable">>({});
 
   useEffect(() => {
     const db = supabaseBrowser();
     initial.forEach(async (r) => {
-      const f = filtersFromQuery(r.query);
-      if (!f) return;
-      const { data } = await db.rpc("search_listings", { p: filtersToRpc({ ...f, sort: undefined, page: undefined }, { page_size: 48 }) as Json });
+      const p = await rpcFromQuery(r.query);
+      if (!p) return setStats((s) => ({ ...s, [r.id]: "unavailable" }));
+      const { data } = await db.rpc("search_listings", { p: p as Json });
       const res = data as unknown as SearchResult | null;
-      if (!res) return;
+      if (!res) return setStats((s) => ({ ...s, [r.id]: "unavailable" }));
       const fresh = res.items.filter((i) => new Date(i.published_at) > new Date(r.last_checked_at)).length;
       setStats((s) => ({ ...s, [r.id]: { total: res.total, fresh } }));
     });
@@ -69,10 +81,10 @@ export function SavedSearches({ initial }: { initial: Row[] }) {
                 <button type="button" onClick={() => open(r)} className="min-w-0 flex-1 text-left">
                   <p className="truncate font-semibold hover:underline">{r.label}</p>
                   <p className="text-sm text-fg-muted">
-                    {s ? `${formatNumber(s.total)} ads` : "Checking…"} · saved {formatDate(r.created_at)}
+                    {s === "unavailable" ? "No longer available" : s ? `${formatNumber(s.total)} ads` : "Checking…"} · saved {formatDate(r.created_at)}
                   </p>
                 </button>
-                {s && s.fresh > 0 && <span className="shrink-0 rounded-full bg-good-soft px-2.5 py-1 text-xs font-bold text-good">{s.fresh >= 48 ? "48+" : s.fresh} new</span>}
+                {s && s !== "unavailable" && s.fresh > 0 && <span className="shrink-0 rounded-full bg-good-soft px-2.5 py-1 text-xs font-bold text-good">{s.fresh >= 48 ? "48+" : s.fresh} new</span>}
                 <button type="button" onClick={() => remove(r.id)} className="grid size-10 shrink-0 place-items-center rounded-xl text-fg-subtle hover:bg-danger-soft hover:text-danger" aria-label={`Delete ${r.label}`}>
                   <Trash2 className="size-[18px]" />
                 </button>

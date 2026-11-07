@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound, permanentRedirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import {
   BadgeCheck,
   Calendar,
@@ -23,7 +23,7 @@ import {
   Clock,
   AlertTriangle,
 } from "lucide-react";
-import { getListing, priceSpread, similarListings } from "@/lib/queries";
+import { getListing, priceSpread, searchListings, similarListings } from "@/lib/queries";
 import { getUser } from "@/lib/supabase/server";
 import { ALL_BODY_LABELS, CONDITIONS, FUELS, TRANSMISSIONS, label, typeBySlug } from "@/lib/constants";
 import { formatDate, formatKm, formatLKR, formatLKRCompact, formatLakhs, formatNumber, timeAgo } from "@/lib/format";
@@ -31,7 +31,9 @@ import { photoUrl, SITE_URL } from "@/lib/env";
 import { site } from "@/lib/site";
 import { Gallery } from "@/components/listing/gallery";
 import { PriceRange } from "@/components/listing/price-range";
-import { ContactPanel, MobileContactBar, ReportButton, ShareButton, ViewTracker } from "@/components/listing/contact";
+import { ContactPanel, MobileContactBar, ReportButton, ShareButton, ViewTracker, WhatsAppShare } from "@/components/listing/contact";
+import { CompareButton } from "@/components/compare";
+import { RecentlyViewed } from "@/components/recently-viewed";
 import { OwnerBar } from "@/components/listing/owner-actions";
 import { LeasingCalculator } from "@/components/leasing-calculator";
 import { FavouriteButton } from "@/components/favourite-button";
@@ -63,27 +65,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   ]
     .filter(Boolean)
     .join(" · ");
-  const image = photoUrl(l.cover_photo);
   return {
     title,
     description,
     alternates: { canonical: `/ad/${l.id}/${l.slug}` },
     robots: l.status === "active" ? undefined : { index: false, follow: true },
-    openGraph: { title, description, images: image ? [{ url: image }] : undefined, type: "website" },
+    openGraph: { title, description, images: [{ url: `/og/ad/${l.id}`, width: 1200, height: 630, alt: l.title }], type: "website" },
+    twitter: { card: "summary_large_image", title, description, images: [`/og/ad/${l.id}`] },
   };
 }
 
 function Spec({ icon: I, label, value }: { icon: typeof Calendar; label: string; value: React.ReactNode }) {
   if (value == null || value === "") return null;
   return (
-    <div className="flex items-start gap-3 rounded-xl p-2.5">
-      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-surface-2 text-fg-muted">
-        <I className="size-[18px]" />
-      </span>
-      <div className="min-w-0">
-        <dt className="text-xs font-medium text-fg-subtle">{label}</dt>
-        <dd className="truncate text-[15px] font-semibold">{value}</dd>
-      </div>
+    <div className="relative min-h-9 rounded-xl p-2.5 pl-14">
+      <dt className="text-xs font-medium text-fg-subtle">
+        <span className="absolute left-2.5 top-2.5 grid size-9 place-items-center rounded-lg bg-surface-2 text-fg-muted" aria-hidden>
+          <I className="size-[18px]" />
+        </span>
+        {label}
+      </dt>
+      <dd className="truncate text-[15px] font-semibold">{value}</dd>
     </div>
   );
 }
@@ -92,12 +94,13 @@ export default async function ListingPage({ params, searchParams }: Props) {
   const { id, slug } = await params;
   const { posted } = await searchParams;
   const l = await load(id);
-  if ((slug?.[0] ?? "") !== l.slug) permanentRedirect(`/ad/${l.id}/${l.slug}${posted ? "?posted=1" : ""}`);
+  if ((slug?.[0] ?? "") !== l.slug) redirect(`/ad/${l.id}/${l.slug}${posted ? "?posted=1" : ""}`);
 
-  const [user, similar, spread] = await Promise.all([
+  const [user, similar, spread, sellerAds] = await Promise.all([
     getUser(),
     similarListings(l.id, 8),
     l.model_id ? priceSpread(l.model_id, l.condition, l.year_manufactured, l.id) : Promise.resolve(null),
+    searchListings({ seller: l.seller_id, page_size: 9 }),
   ]);
 
   const isOwner = user?.id === l.seller_id;
@@ -112,6 +115,9 @@ export default async function ListingPage({ params, searchParams }: Props) {
   const lakhs = formatLakhs(l.price_lkr);
   const lastDrop = l.price_changes.find((c) => c.new_price_lkr < c.old_price_lkr);
   const subject = [l.make?.name, l.model?.name].filter(Boolean).join(" ");
+  const shareText = `${l.title} for ${formatLKR(l.price_lkr)}${where ? ` in ${where}` : ""} on Wahana: ${SITE_URL}/ad/${l.id}/${l.slug}`;
+  const similarIds = new Set(similar.map((s) => s.id));
+  const moreFromSeller = sellerAds.items.filter((a) => a.id !== l.id && !similarIds.has(a.id)).slice(0, 8);
   const searchHref = l.make ? `/${t?.path ?? "vehicles"}/${l.make.slug}${l.model ? `/${l.model.slug}` : ""}` : `/${t?.path ?? "vehicles"}`;
 
   const jsonLd = {
@@ -372,11 +378,13 @@ export default async function ListingPage({ params, searchParams }: Props) {
                 <DealBadge rating={l.price_rating} price={l.price_lkr} median={l.market_median_lkr} peers={l.market_peer_count} />
               </p>
               <div className="mt-5">
-                <ContactPanel listingId={l.id} title={l.title} isOwner={isOwner} live={live} sellerFirstName={sellerName} />
+                <ContactPanel listingId={l.id} title={l.title} price={l.price_lkr} isOwner={isOwner} live={live} sellerFirstName={sellerName} />
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <FavouriteButton id={l.id} variant="plain" withLabel />
+                <CompareButton id={l.id} />
                 <ShareButton title={l.title} />
+                <WhatsAppShare text={shareText} />
               </div>
             </div>
 
@@ -400,8 +408,10 @@ export default async function ListingPage({ params, searchParams }: Props) {
                   See all ads from this dealer
                 </ButtonLink>
               )}
-              <div className="mt-4 lg:hidden">
-                <ShareButton title={l.title} className="w-full" />
+              <div className="mt-4 grid grid-cols-2 gap-2 lg:hidden">
+                <CompareButton id={l.id} className="col-span-2" />
+                <ShareButton title={l.title} />
+                <WhatsAppShare text={shareText} />
               </div>
             </div>
 
@@ -415,7 +425,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
                 <li>Meet somewhere public, and bring a mechanic if you can.</li>
               </ul>
               <div className="mt-4 flex items-center justify-between gap-2">
-                <Link href="/safety" className="text-sm font-semibold text-brand-text hover:underline">
+                <Link href="/safety" className="inline-flex min-h-8 items-center text-sm font-semibold text-brand-text hover:underline">
                   More safety tips
                 </Link>
                 {!isOwner && <ReportButton listingId={l.id} />}
@@ -424,15 +434,28 @@ export default async function ListingPage({ params, searchParams }: Props) {
           </aside>
         </div>
 
+        {moreFromSeller.length > 0 && (
+          <section className="mt-12" aria-labelledby="seller-more">
+            <SectionHeader
+              title={<span id="seller-more">More from {sellerName}</span>}
+              href={isDealer && seller?.dealer_slug ? `/dealers/${seller.dealer_slug}` : undefined}
+              linkLabel={`All ${sellerAds.total} ads`}
+            />
+            <ListingRail items={moreFromSeller} />
+          </section>
+        )}
+
         {similar.length > 0 && (
           <section className="mt-12" aria-labelledby="similar">
             <SectionHeader title={<span id="similar">Similar vehicles</span>} sub={`Other ${subject || t?.plural.toLowerCase()} for sale`} href={searchHref} />
             <ListingRail items={similar.slice(0, 8)} />
           </section>
         )}
+
+        <RecentlyViewed exclude={l.id} className="mt-12" />
       </div>
 
-      {live && !isOwner && <MobileContactBar listingId={l.id} title={l.title} price={formatLKR(l.price_lkr)} />}
+      {live && !isOwner && <MobileContactBar listingId={l.id} title={l.title} price={l.price_lkr} />}
     </>
   );
 }

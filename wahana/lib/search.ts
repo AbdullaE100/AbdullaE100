@@ -50,7 +50,6 @@ export const QUERY_KEYS = [
 ] as const satisfies readonly (keyof Filters)[];
 
 const SLUG = /^[a-z0-9-]{1,60}$/;
-const NUM = /^\d{1,12}$/;
 
 const VALIDATORS: Partial<Record<keyof Filters, (v: string) => boolean>> = {
   district: (v) => SLUG.test(v),
@@ -59,18 +58,18 @@ const VALIDATORS: Partial<Record<keyof Filters, (v: string) => boolean>> = {
   fuel: (v) => FUELS.some((c) => c.value === v),
   transmission: (v) => TRANSMISSIONS.some((c) => c.value === v),
   body: (v) => SLUG.test(v),
-  price_min: (v) => NUM.test(v),
-  price_max: (v) => NUM.test(v),
+  price_min: (v) => /^\d{1,10}$/.test(v),
+  price_max: (v) => /^\d{1,10}$/.test(v),
   year_min: (v) => /^\d{4}$/.test(v),
   year_max: (v) => /^\d{4}$/.test(v),
-  mileage_max: (v) => NUM.test(v),
+  mileage_max: (v) => /^\d{1,7}$/.test(v),
   deal: (v) => v === "good",
   photos: (v) => v === "true",
   leasing: (v) => v === "true",
   seller_type: (v) => v === "private" || v === "dealer",
   q: (v) => v.trim().length > 0 && v.length <= 80,
   sort: (v) => SORTS.some((s) => s.value === v),
-  page: (v) => /^\d{1,3}$/.test(v) && Number(v) > 1,
+  page: (v) => /^\d{1,3}$/.test(v) && Number(v) > 1 && Number(v) <= 200,
 };
 
 type SP = Record<string, string | string[] | undefined> | URLSearchParams;

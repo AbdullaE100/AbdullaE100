@@ -62,7 +62,12 @@ export function ListingCard({
   eager,
   layout = "grid",
   className,
+  preview,
+  note,
 }: {
+  preview?: boolean;
+  /** Extra line under the details, e.g. a price drop since saving. */
+  note?: React.ReactNode;
   l: Card;
   eager?: boolean;
   /** "responsive" is a row on phones and a card from sm up. */
@@ -88,13 +93,17 @@ export function ListingCard({
             <Camera className="size-3" /> {l.photo_count}
           </span>
         )}
-        <FavouriteButton id={l.id} className={cn("absolute right-2 top-2", row && "max-sm:size-9")} />
+        {!preview && <FavouriteButton id={l.id} className={cn("absolute right-2 top-2", row && "max-sm:size-9")} />}
       </div>
       <div className={cn("flex min-w-0 flex-1 flex-col", row ? "gap-1 p-3 sm:gap-1.5 sm:p-3.5" : "gap-1.5 p-3.5")}>
         <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug sm:line-clamp-1">
-          <Link href={adHref(l)} className="after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:rounded-2xl focus-visible:after:ring-2 focus-visible:after:ring-brand">
-            {l.title}
-          </Link>
+          {preview ? (
+            l.title
+          ) : (
+            <Link href={adHref(l)} className="after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:rounded-2xl focus-visible:after:ring-2 focus-visible:after:ring-brand">
+              {l.title}
+            </Link>
+          )}
         </h3>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <p className="tabular text-lg font-bold tracking-tight">{formatLKR(l.price_lkr)}</p>
@@ -104,10 +113,11 @@ export function ListingCard({
           <DealBadge rating={l.price_rating} price={l.price_lkr} median={l.market_median_lkr} peers={l.market_peer_count} />
         </div>
         <p className="truncate text-[13px] text-fg-muted">{specLine(l)}</p>
+        {note}
         <p className="mt-auto flex items-center gap-1.5 truncate pt-0.5 text-xs text-fg-subtle">
           <span className="truncate">{where}</span>
           <span aria-hidden>·</span>
-          <time dateTime={l.bumped_at} className="shrink-0">
+          <time dateTime={l.bumped_at} className="shrink-0" suppressHydrationWarning>
             {timeAgo(l.bumped_at)}
           </time>
           {l.is_dealer && (

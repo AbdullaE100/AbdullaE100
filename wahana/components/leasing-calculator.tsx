@@ -62,7 +62,7 @@ export function LeasingCalculator({ price: initial, editablePrice = false, compa
               step={5}
               value={downPct}
               onChange={(e) => setDownPct(Number(e.target.value))}
-              className="h-2 w-full cursor-pointer accent-[var(--brand)]"
+              className="h-7 w-full cursor-pointer accent-[var(--brand)]"
             />
           </div>
           <div>

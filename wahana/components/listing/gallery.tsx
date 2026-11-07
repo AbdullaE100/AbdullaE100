@@ -12,6 +12,7 @@ export function Gallery({ photos, title, type, seed }: { photos: Photo[]; title:
   const [zoom, setZoom] = useState(false);
   const track = useRef<HTMLDivElement>(null);
   const dialog = useRef<HTMLDialogElement>(null);
+  const touchX = useRef<number | null>(null);
   const n = photos.length;
 
   const goTo = useCallback(
@@ -142,7 +143,16 @@ export function Gallery({ photos, title, type, seed }: { photos: Photo[]; title:
         aria-label="Photo viewer"
       >
         {zoom && (
-          <div className="relative flex h-full w-full items-center justify-center">
+          <div
+            className="relative flex h-full w-full touch-pan-y items-center justify-center"
+            onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
+            onTouchEnd={(e) => {
+              if (touchX.current == null || n < 2) return;
+              const dx = e.changedTouches[0].clientX - touchX.current;
+              touchX.current = null;
+              if (Math.abs(dx) > 45) setIndex((i) => (i + (dx < 0 ? 1 : -1) + n) % n);
+            }}
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={photoUrl(photos[index].path)!} alt={`${title}, photo ${index + 1}`} className="max-h-full max-w-full object-contain" />
             <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3">

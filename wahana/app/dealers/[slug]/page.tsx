@@ -59,7 +59,7 @@ export default async function DealerPage({ params, searchParams }: Props) {
       header={
         <div className="mb-6">
           <nav aria-label="Breadcrumb" className="mb-4 flex items-center gap-1 text-sm text-fg-muted">
-            <Link href="/dealers" className="hover:text-fg hover:underline">
+            <Link href="/dealers" className="inline-flex min-h-7 items-center hover:text-fg hover:underline">
               Dealers
             </Link>
             <ChevronRight className="size-3.5" />

@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Phone, MessageCircle, Share2, Flag, Check, Copy } from "lucide-react";
 import { useSession } from "@/app/providers";
+import { recordRecent } from "@/lib/recent";
+import { formatOffer } from "@/lib/offer";
+import { formatLakhs } from "@/lib/format";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { displayLkPhone } from "@/lib/format";
 import { REPORT_REASONS } from "@/lib/constants";
@@ -47,7 +50,7 @@ function waLink(num: string, title: string) {
   return `https://wa.me/${num.replace(/^\+/, "")}?text=${text}`;
 }
 
-export function ContactPanel({ listingId, title, isOwner, live, sellerFirstName }: { listingId: number; title: string; isOwner: boolean; live: boolean; sellerFirstName: string }) {
+export function ContactPanel({ listingId, title, price, isOwner, live, sellerFirstName }: { listingId: number; title: string; price: number; isOwner: boolean; live: boolean; sellerFirstName: string }) {
   const { contact, busy, reveal } = useReveal(listingId);
   const [copied, setCopied] = useState(false);
 
@@ -76,13 +79,15 @@ export function ContactPanel({ listingId, title, isOwner, live, sellerFirstName 
               {copied ? <Check className="size-4 text-good" /> : <Copy className="size-4" />}
             </button>
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className={cn("mt-3 grid gap-2", contact.whatsapp ? "grid-cols-2" : "grid-cols-1")}>
             <a href={`tel:${contact.phone}`} className={buttonClass({ variant: "primary", size: "md", className: "w-full" })}>
               <Phone className="size-4" /> Call
             </a>
-            <a href={waLink(contact.whatsapp || contact.phone, title)} target="_blank" rel="noopener" className={buttonClass({ variant: "secondary", size: "md", className: "w-full text-[#128c4b]" })}>
-              <WhatsAppIcon className="size-[18px]" /> WhatsApp
-            </a>
+            {contact.whatsapp && (
+              <a href={waLink(contact.whatsapp, title)} target="_blank" rel="noopener" className={buttonClass({ variant: "secondary", size: "md", className: "w-full text-[#0f7a42] dark:text-[#3ccf83]" })}>
+                <WhatsAppIcon className="size-[18px]" /> WhatsApp
+              </a>
+            )}
           </div>
         </div>
       ) : contact === "none" ? (
@@ -92,20 +97,37 @@ export function ContactPanel({ listingId, title, isOwner, live, sellerFirstName 
           {!busy && <Phone className="size-[18px]" />} Show phone number
         </Button>
       )}
-      <ChatButton listingId={listingId} title={title} variant={contact && contact !== "none" ? "secondary" : contact === "none" ? "primary" : "secondary"} />
+      <ChatButton listingId={listingId} title={title} price={price} variant={contact && contact !== "none" ? "secondary" : contact === "none" ? "primary" : "secondary"} />
     </div>
   );
 }
 
 const QUICK_REPLIES = ["Is it still available?", "What's your best price?", "Can I see it this weekend?", "Is the CR book clear?", "Any accident repairs?"];
 
-export function ChatButton({ listingId, title, variant = "secondary", className, compact }: { listingId: number; title: string; variant?: "primary" | "secondary"; className?: string; compact?: boolean }) {
+export function ChatButton({
+  listingId,
+  title,
+  price,
+  variant = "secondary",
+  className,
+  compact,
+}: {
+  listingId: number;
+  title: string;
+  price?: number;
+  variant?: "primary" | "secondary";
+  className?: string;
+  compact?: boolean;
+}) {
   const session = useSession();
   const router = useRouter();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [body, setBody] = useState(`Hi, is your ${title} still available?`);
+  const [offer, setOffer] = useState("");
   const [busy, setBusy] = useState(false);
+  const offerAmount = Number(offer.replace(/\D/g, "")) || 0;
+  const offerPct = price && offerAmount ? Math.round(((price - offerAmount) / price) * 100) : null;
 
   if (!session)
     return (
@@ -116,7 +138,8 @@ export function ChatButton({ listingId, title, variant = "secondary", className,
 
   const send = async () => {
     setBusy(true);
-    const { data, error } = await supabaseBrowser().rpc("start_conversation", { p_listing_id: listingId, p_body: body });
+    const text = offerAmount >= 10_000 ? formatOffer(offerAmount, body) : body;
+    const { data, error } = await supabaseBrowser().rpc("start_conversation", { p_listing_id: listingId, p_body: text });
     setBusy(false);
     if (error || !data) {
       toast({ tone: "error", title: error?.message || "Couldn't send your message" });
@@ -156,9 +179,42 @@ export function ChatButton({ listingId, title, variant = "secondary", className,
           ))}
         </div>
         <Label htmlFor="chat-body">Your message</Label>
-        <Textarea id="chat-body" value={body} onChange={(e) => setBody(e.target.value)} maxLength={2000} rows={4} autoFocus />
+        <Textarea id="chat-body" value={body} onChange={(e) => setBody(e.target.value)} maxLength={1900} rows={4} autoFocus />
+        <Label htmlFor="chat-offer" optional className="mt-4">
+          Make an offer
+        </Label>
+        <div className="relative">
+          <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-sm font-semibold text-fg-muted">Rs</span>
+          <input
+            id="chat-offer"
+            inputMode="numeric"
+            value={offerAmount ? offerAmount.toLocaleString("en-LK") : ""}
+            onChange={(e) => setOffer(e.target.value)}
+            placeholder={price ? Math.round(price * 0.95).toLocaleString("en-LK") : "Your price"}
+            className="block h-12 w-full rounded-xl border border-border bg-surface pl-11 pr-3.5 text-[15px] shadow-sm placeholder:text-fg-subtle focus:border-brand focus:outline-none focus:ring-4 focus:ring-[var(--ring)]"
+          />
+        </div>
+        {offerAmount > 0 && (
+          <p className="mt-1.5 text-[13px] text-fg-muted">
+            {formatLakhs(offerAmount)}
+            {offerPct != null && offerPct !== 0 && ` · ${Math.abs(offerPct)}% ${offerPct > 0 ? "below" : "above"} the asking price`}
+          </p>
+        )}
       </Dialog>
     </>
+  );
+}
+
+export function WhatsAppShare({ text, className }: { text: string; className?: string }) {
+  return (
+    <a
+      href={`https://wa.me/?text=${encodeURIComponent(text)}`}
+      target="_blank"
+      rel="noopener"
+      className={cn(buttonClass({ variant: "secondary", size: "md" }), "text-[#0f7a42] dark:text-[#3ccf83]", className)}
+    >
+      <WhatsAppIcon className="size-[18px]" /> WhatsApp
+    </a>
   );
 }
 
@@ -196,7 +252,7 @@ export function ReportButton({ listingId }: { listingId: number }) {
 
   if (!session)
     return (
-      <Link href={`/signin?next=${encodeURIComponent(`/ad/${listingId}`)}`} className="inline-flex items-center gap-1.5 text-sm font-medium text-fg-muted hover:text-danger">
+      <Link href={`/signin?next=${encodeURIComponent(`/ad/${listingId}`)}`} className="inline-flex min-h-8 items-center gap-1.5 text-sm font-medium text-fg-muted hover:text-danger">
         <Flag className="size-4" /> Report this ad
       </Link>
     );
@@ -213,7 +269,7 @@ export function ReportButton({ listingId }: { listingId: number }) {
 
   return (
     <>
-      <button type="button" disabled={done} onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 text-sm font-medium text-fg-muted hover:text-danger disabled:opacity-60">
+      <button type="button" disabled={done} onClick={() => setOpen(true)} className="inline-flex min-h-8 items-center gap-1.5 text-sm font-medium text-fg-muted hover:text-danger disabled:opacity-60">
         <Flag className="size-4" /> {done ? "Reported" : "Report this ad"}
       </button>
       <Dialog
@@ -248,6 +304,7 @@ export function ReportButton({ listingId }: { listingId: number }) {
 export function ViewTracker({ listingId, skip }: { listingId: number; skip?: boolean }) {
   useEffect(() => {
     if (skip) return;
+    recordRecent(listingId);
     const key = `wahana:viewed:${listingId}`;
     try {
       if (sessionStorage.getItem(key)) return;
@@ -259,7 +316,7 @@ export function ViewTracker({ listingId, skip }: { listingId: number; skip?: boo
 }
 
 /** Sticky bottom bar on phones. */
-export function MobileContactBar({ listingId, title }: { listingId: number; title: string; price?: string }) {
+export function MobileContactBar({ listingId, title, price }: { listingId: number; title: string; price: number }) {
   const { contact, busy, reveal } = useReveal(listingId);
   return (
     <div className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 px-4 pt-3 backdrop-blur-xl lg:hidden">
@@ -275,7 +332,7 @@ export function MobileContactBar({ listingId, title }: { listingId: number; titl
           </Button>
         )}
         <div className="flex-1 basis-0">
-          <ChatButton listingId={listingId} title={title} compact variant={contact === "none" ? "primary" : "secondary"} />
+          <ChatButton listingId={listingId} title={title} price={price} compact variant={contact === "none" ? "primary" : "secondary"} />
         </div>
       </div>
       {contact === "none" && <p className="mt-2 text-xs text-fg-muted">No phone number shared. Message the seller instead.</p>}

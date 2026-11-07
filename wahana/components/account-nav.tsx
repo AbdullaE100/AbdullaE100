@@ -17,7 +17,7 @@ export function AccountNav() {
   const pathname = usePathname();
   const { unread } = useInbox();
   return (
-    <nav aria-label="Account" className="no-scrollbar -mx-4 flex gap-1 overflow-x-auto px-4 sm:mx-0 sm:px-0 lg:flex-col">
+    <nav aria-label="Account sections" className="no-scrollbar -mx-4 flex gap-1 overflow-x-auto px-4 sm:mx-0 sm:px-0 lg:flex-col">
       {ITEMS.map(({ href, label, icon: I }) => {
         const on = pathname.startsWith(href);
         return (
@@ -32,7 +32,7 @@ export function AccountNav() {
           >
             <I className={cn("size-[18px]", on && "text-brand-text")} />
             {label}
-            {href === "/messages" && unread > 0 && <span className="ml-auto rounded-full bg-danger px-1.5 text-xs font-bold text-white">{unread}</span>}
+            {href === "/messages" && unread > 0 && <span className="ml-auto rounded-full bg-danger-solid px-1.5 text-xs font-bold text-white">{unread}</span>}
           </Link>
         );
       })}

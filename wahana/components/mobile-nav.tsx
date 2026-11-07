@@ -40,7 +40,7 @@ export function MobileNav() {
                 <span className="relative grid h-8 w-12 place-items-center">
                   <I className={cn("size-[22px]", on && "fill-brand-soft")} strokeWidth={on ? 2.4 : 2} />
                   {!!badge && (
-                    <span className="absolute right-1.5 top-0 grid h-4 min-w-4 place-items-center rounded-full bg-danger px-1 text-[10px] font-bold text-white ring-2 ring-surface">
+                    <span className="absolute right-1.5 top-0 grid h-4 min-w-4 place-items-center rounded-full bg-danger-solid px-1 text-[10px] font-bold text-white ring-2 ring-surface">
                       {badge > 9 ? "9+" : badge}
                     </span>
                   )}
