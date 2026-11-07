@@ -120,7 +120,13 @@ function Form({ userId, initial }: { userId: string; initial: Values }) {
     }
     const phone = v.phone ? normalizeLkPhone(v.phone) : null;
     const whatsapp = v.whatsapp ? normalizeLkPhone(v.whatsapp) : null;
-    if (phone || whatsapp || v.hasContacts) await supabase.from("profile_contacts").upsert({ id: userId, phone, whatsapp }, { onConflict: "id" });
+    if (phone || whatsapp || v.hasContacts) {
+      const { error: contactErr } = await supabase.from("profile_contacts").upsert({ id: userId, phone, whatsapp }, { onConflict: "id" });
+      if (contactErr) {
+        setSaving(false);
+        return toast({ tone: "error", title: "Couldn't save your contact details", body: "Your name and account settings were saved. Try again." });
+      }
+    }
     setSaving(false);
     await refreshProfile();
     toast({ tone: "success", title: "Profile saved" });

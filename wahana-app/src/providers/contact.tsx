@@ -74,19 +74,22 @@ export function ContactProvider({ children }: { children: ReactNode }) {
     if (p) setTimeout(() => setChatTarget({ listingId: p.listingId, title: p.title, price: p.price, sellerName: p.sellerName, source: p.source }), 400);
   }, [userId]);
 
+  const closeCall = useCallback(() => setCallTarget(null), []);
+  const chatFromCall = useCallback(
+    (t: ContactTarget) => {
+      setCallTarget(null);
+      setTimeout(() => chat(t), 250);
+    },
+    [chat],
+  );
+  const closeChat = useCallback(() => setChatTarget(null), []);
+
   const value = useMemo(() => ({ call, chat }), [call, chat]);
   return (
     <ContactContext value={value}>
       {children}
-      <CallSheet
-        target={callTarget}
-        onClose={() => setCallTarget(null)}
-        onChat={(t) => {
-          setCallTarget(null);
-          setTimeout(() => chat(t), 250);
-        }}
-      />
-      <ChatSheet target={chatTarget} onClose={() => setChatTarget(null)} />
+      <CallSheet target={callTarget} onClose={closeCall} onChat={chatFromCall} />
+      <ChatSheet target={chatTarget} onClose={closeChat} />
     </ContactContext>
   );
 }

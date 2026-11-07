@@ -316,11 +316,11 @@ export function useConversation(id: string, me: string | undefined) {
     queryKey: ["conversation", id, me],
     enabled: !!me && !!id,
     queryFn: async () => {
-      const [{ data: c, error }, { data: msgs }] = await Promise.all([
+      const [{ data: c, error }, { data: msgs, error: msgErr }] = await Promise.all([
         supabase.from("conversations").select(CONV_SELECT).eq("id", id).maybeSingle(),
         supabase.from("messages").select("id, sender_id, body, created_at").eq("conversation_id", id).order("created_at", { ascending: false }).limit(300),
       ]);
-      if (error) throw error;
+      if (error || msgErr) throw error ?? msgErr;
       if (!c) return null;
       return { ...shapeConversation(c, me!), messages: ((msgs ?? []) as Message[]).reverse() };
     },

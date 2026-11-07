@@ -1,6 +1,5 @@
 import { Image } from "expo-image";
 import { AlertCircle, Camera, ChevronLeft, ChevronRight, ImagePlus, RotateCcw, Star, X } from "lucide-react-native";
-import { useRef } from "react";
 import { ActivityIndicator, Alert, Linking, Platform, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
@@ -13,24 +12,28 @@ import { radius, useColors } from "@/lib/theme";
 
 type Update = (fn: (prev: DraftPhoto[]) => DraftPhoto[]) => void;
 
+// Picked files waiting to upload (or to retry), kept outside the component so
+// they survive the grid unmounting when the seller moves between steps.
+const sources = new Map<string, Picked>();
+
 export function PhotoGrid({ userId, folder, photos, onChange }: { userId: string; folder: string; photos: DraftPhoto[]; onChange: Update }) {
   const c = useColors();
   const { toast } = useToast();
   const { width } = useWindowDimensions();
-  const sources = useRef(new Map<string, Picked>());
+
   const cols = width >= 700 ? 4 : 3;
   const size = Math.floor((Math.min(width, 720) - 32 - (cols - 1) * 8) / cols);
 
   const patch = (key: string, p: Partial<DraftPhoto>) => onChange((all) => all.map((x) => (x.key === key ? { ...x, ...p } : x)));
 
   const run = async (key: string) => {
-    const src = sources.current.get(key);
+    const src = sources.get(key);
     if (!src) return;
     try {
       patch(key, { status: "uploading", error: undefined });
       const up = await uploadPhoto(userId, folder, src);
       patch(key, { status: "done", ...up });
-      sources.current.delete(key);
+      sources.delete(key);
     } catch (e) {
       patch(key, { status: "error", error: (e as Error).message || "Upload failed" });
     }
@@ -51,7 +54,7 @@ export function PhotoGrid({ userId, folder, photos, onChange }: { userId: string
     track("sell_photo_added", { count: picked.length, source: from, total: photos.length + picked.length });
     const items = picked.map((p) => {
       const key = uid();
-      sources.current.set(key, p);
+      sources.set(key, p);
       return { key, status: "processing" as const, localUri: p.uri };
     });
     onChange((all) => [...all, ...items]);
@@ -77,7 +80,7 @@ export function PhotoGrid({ userId, folder, photos, onChange }: { userId: string
     const p = photos.find((x) => x.key === key);
     // New uploads aren't attached to an ad yet, so their files can go now; existing ones go on save.
     if (p && !p.id && p.path) removePhotos([p.path, p.thumb_path].filter(Boolean) as string[]).catch(() => {});
-    sources.current.delete(key);
+    sources.delete(key);
     onChange((all) => all.filter((x) => x.key !== key));
   };
 

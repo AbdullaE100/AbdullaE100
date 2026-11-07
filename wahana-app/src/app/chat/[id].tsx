@@ -87,10 +87,17 @@ export default function ThreadScreen() {
 
   // Catch up on anything sent while the socket was connecting or the phone slept.
   const catchUp = useCallback(async () => {
+    // Before the first load there's nothing to catch up from; the load itself is current.
+    if (!latest.current.length) return;
     const lastId = latest.current.reduce((max, m) => (m.id > max ? m.id : max), 0);
     const { data } = await supabase.from("messages").select("id, sender_id, body, created_at").eq("conversation_id", id).gt("id", lastId).order("id").limit(200);
     merge((data ?? []) as Message[]);
   }, [id, merge]);
+
+  // Anything sent between the first load and the subscription going live.
+  useEffect(() => {
+    if (seeded) void catchUp();
+  }, [seeded, catchUp]);
 
   useEffect(() => {
     if (!me || !id) return;

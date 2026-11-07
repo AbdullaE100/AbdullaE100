@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef, t
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BODY_TYPES, COLOURS, CONDITIONS, FEATURES, FUELS, MAX_YEAR, TRANSMISSIONS, VEHICLE_TYPES, label } from "@shared/constants";
-import { formatLakhs, formatLKR, formatLKRCompact, normalizeLkPhone } from "@shared/format";
+import { formatDateShort, formatLakhs, formatLKR, formatLKRCompact, formatTime, normalizeLkPhone } from "@shared/format";
 import type { ListingCard as Card } from "@shared/types";
 import { ResultCard } from "@/components/listing/cards";
 import { Button } from "@/components/ui/button";
@@ -18,10 +18,12 @@ import { Text } from "@/components/ui/text";
 import { useToast } from "@/components/ui/toast";
 import { VehicleArt } from "@/components/vehicle-art";
 import { track } from "@/lib/analytics";
-import { useCatalog, useCities, usePriceSpread } from "@/lib/api";
+import { useCatalog, useCities, useMyAds, usePriceSpread, type MyAd } from "@/lib/api";
 import { NO_TRANSMISSION, STEPS, digits, draftTitle, emptyDraft, firstInvalidStep, toListingRow, validate, type Draft, type Errors, type StepId } from "@/lib/sell/draft";
 import { supabase } from "@/lib/supabase";
 import { radius, useColors } from "@/lib/theme";
+import { useSession } from "@/providers/session";
+import { removePhotos } from "@/lib/sell/photos";
 import { PhotoGrid } from "./photo-grid";
 
 const OTHER = -1;
@@ -62,6 +64,8 @@ export function SellWizard({
   const qc = useQueryClient();
   const { toast } = useToast();
   const cat = useCatalog();
+  const myAds = useMyAds(userId ?? undefined);
+  const { profile } = useSession();
   const [d, setD] = useState<Draft>(
     () =>
       initial ?? {
@@ -104,7 +108,7 @@ export function SellWizard({
   useEffect(() => {
     if (mode !== "create" || didRestore.current) return;
     didRestore.current = true;
-    AsyncStorage.getItem(draftKey(userId ?? "anon"))
+    (async () => (userId ? ((await AsyncStorage.getItem(draftKey(userId))) ?? (await AsyncStorage.getItem(draftKey("anon")))) : AsyncStorage.getItem(draftKey("anon"))))()
       .then((raw) => {
         if (!raw) return;
         const saved = JSON.parse(raw) as { draft: Draft; step: number };
@@ -183,10 +187,17 @@ export function SellWizard({
       }
     }
   }
-  // The draft now lives under their account.
+  // Once signed in, the draft lives under their account; the copy kept while
+  // signed out goes only after the autosave has written it there.
   useEffect(() => {
-    if (userId && mode === "create") AsyncStorage.removeItem(draftKey("anon")).catch(() => {});
-  }, [userId, mode]);
+    if (!userId || mode !== "create") return;
+    const t = setTimeout(() => {
+      AsyncStorage.getItem(draftKey(userId))
+        .then((mine) => (mine ? AsyncStorage.removeItem(draftKey("anon")) : undefined))
+        .catch(() => {});
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [userId, mode, d]);
 
   const back = () => (step > 0 ? goto(step - 1) : exit());
 
@@ -272,19 +283,16 @@ export function SellWizard({
             stale.map((r) => r.id),
           );
         if (del.error) throw del.error;
-        supabase.storage
-          .from("listing-photos")
-          .remove(stale.flatMap((r) => [r.path, r.thumb_path].filter(Boolean) as string[]))
-          .then(() => {});
+        removePhotos(stale.flatMap((r) => [r.path, r.thumb_path].filter(Boolean) as string[])).catch(() => {});
       }
       const have = new Map((rows ?? []).filter((r) => wanted.has(r.path)).map((r) => [r.path, r]));
-      for (const [path, pos] of wanted) {
+      const moves = [...wanted].flatMap(([path, pos]) => {
         const r = have.get(path);
-        if (r && r.position !== pos) {
-          const u = await supabase.from("listing_photos").update({ position: pos }).eq("id", r.id);
-          if (u.error) throw u.error;
-        }
-      }
+        return r && r.position !== pos ? [supabase.from("listing_photos").update({ position: pos }).eq("id", r.id)] : [];
+      });
+      const moved = await Promise.all(moves);
+      const moveErr = moved.find((u) => u.error)?.error;
+      if (moveErr) throw moveErr;
       const fresh = done.map((ph, i) => ({ ph, i })).filter(({ ph }) => !have.has(ph.path!));
       if (fresh.length) {
         const ins = await supabase
@@ -295,22 +303,30 @@ export function SellWizard({
         if (ins.error) throw ins.error;
       }
 
-      if (saveContact) await supabase.from("profile_contacts").upsert({ id: userId, phone, whatsapp }, { onConflict: "id" });
+      let contactSaved = true;
+      if (saveContact) contactSaved = !(await supabase.from("profile_contacts").upsert({ id: userId, phone, whatsapp }, { onConflict: "id" })).error;
       if (isNew) AsyncStorage.removeItem(draftKey(userId)).catch(() => {});
       if (isNew) track("sell_published", { listing_id: id, photos: done.length, has_description: !!row.description, used_median: false });
       qc.invalidateQueries({ queryKey: ["my-ads"] });
       qc.invalidateQueries({ queryKey: ["listing", id] });
       qc.invalidateQueries({ queryKey: ["rail"] });
       qc.invalidateQueries({ queryKey: ["search"] });
-      toast({ tone: "success", title: isNew ? "Your ad is live" : "Changes saved" });
-      router.replace({ pathname: "/ad/[id]", params: { id: String(id), ...(isNew ? { posted: "1" } : {}) } });
+      toast(
+        contactSaved
+          ? { tone: "success", title: isNew ? "Your ad is live" : "Changes saved" }
+          : { tone: "success", title: isNew ? "Your ad is live" : "Changes saved", body: "We couldn't save your contact details for next time. You can add them in Profile." },
+      );
+      // A new ad replaces the wizard; an edit returns to wherever it was opened from (the ad or My ads), now refreshed.
+      if (isNew) router.replace({ pathname: "/ad/[id]", params: { id: String(id), posted: "1" } });
+      else if (router.canGoBack()) router.back();
+      else router.replace({ pathname: "/ad/[id]", params: { id: String(id) } });
     } catch (e) {
       const msg = (e as { message?: string }).message || "Something went wrong.";
       track("sell_failed", { mode, message: msg.slice(0, 80), live: liveAlready });
       setSubmitError(
         liveAlready || created.current
           ? `Your ad is live, but we couldn't finish saving everything (${msg}). Tap Publish again to retry; it won't post a duplicate.`
-          : `${friendlyDb(msg)} Your draft is saved, so you can try again.`,
+          : `${friendlyDb(msg)} Your draft is saved on this phone.`,
       );
       setPublishing(false);
     }
@@ -348,7 +364,7 @@ export function SellWizard({
     condition: d.condition ?? "used",
     year_manufactured: Number(d.year_manufactured) || MAX_YEAR,
     year_registered: d.year_registered ? Number(d.year_registered) : null,
-    mileage_km: d.mileage_km ? Number(digits(d.mileage_km)) : null,
+    mileage_km: d.condition !== "brand_new" && d.mileage_km ? Number(digits(d.mileage_km)) : null,
     fuel: d.fuel,
     transmission: d.transmission,
     engine_cc: null,
@@ -782,6 +798,7 @@ export function SellWizard({
 
   const body: Record<StepId, ReactNode> = { vehicle: stepVehicle, details: stepDetails, photos: stepPhotos, price: stepPrice, contact: stepContact, review: stepReview };
   const errCount = Object.values(errors).filter(Boolean).length;
+  const block = mode === "create" ? postingBlock(myAds.data, profile?.account_type === "dealer") : null;
   const uploading = d.photos.some((p) => p.status === "processing" || p.status === "uploading");
 
   return (
@@ -836,6 +853,17 @@ export function SellWizard({
         <Text variant="h2" accessibilityRole="header">
           {STEPS[step].heading}
         </Text>
+        {block && (step === 0 || current === "review") && (
+          <View style={[styles.notice, { backgroundColor: c.highSoft }]} role="alert">
+            <Info size={18} color={c.high} />
+            <View style={[styles.flex, { gap: 8 }]}>
+              <Text variant="small" style={{ color: c.high }}>
+                {block.text}
+              </Text>
+              {block.myAds && <Button title="Go to My ads" size="sm" variant="secondary" style={styles.self} onPress={() => router.push("/my-ads")} />}
+            </View>
+          </View>
+        )}
         {errCount > 0 && current !== "photos" && (
           <Notice tone="danger" text={errCount === 1 ? "Fix the highlighted field to continue." : `Fix the ${errCount} highlighted fields to continue.`} />
         )}
@@ -867,11 +895,28 @@ export function SellWizard({
   );
 }
 
+// The database's own messages (posting limits etc.) are already written for people; only network failures need rewording.
 function friendlyDb(msg: string) {
   const m = msg.toLowerCase();
-  if (m.includes("10 live") || m.includes("limit")) return "You've reached the limit of 10 live ads for private sellers. Mark one as sold or remove it first.";
-  if (m.includes("network") || m.includes("fetch")) return "No connection.";
+  if (m.includes("network") || m.includes("failed to fetch")) return "No connection.";
   return msg;
+}
+
+/** The posting rules the database enforces, checked up front so nobody fills in six steps to be refused. */
+function postingBlock(ads: MyAd[] | undefined, isDealer: boolean): { text: string; myAds?: boolean } | null {
+  if (!ads) return null;
+  const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+  const recent = ads.filter((a) => new Date(a.created_at).getTime() > dayAgo).sort((a, b) => a.created_at.localeCompare(b.created_at));
+  if (recent.length >= 10) {
+    const at = new Date(new Date(recent[recent.length - 10].created_at).getTime() + 24 * 60 * 60 * 1000);
+    return {
+      text: `You've posted 10 ads in the last 24 hours, the most allowed. You can publish again from ${formatTime(at)} on ${formatDateShort(at)}. Finish this ad now; it's saved on this phone.`,
+    };
+  }
+  if (!isDealer && ads.filter((a) => a.status === "active").length >= 10) {
+    return { text: "You have 10 live ads, the limit for private sellers. Mark one as sold in My ads to publish this one.", myAds: true };
+  }
+  return null;
 }
 
 function Field({ label: l, error, hint, optional, children }: { label: string; error?: string; hint?: string; optional?: boolean; children: ReactNode }) {

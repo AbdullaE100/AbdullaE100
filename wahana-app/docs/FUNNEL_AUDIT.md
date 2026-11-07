@@ -33,6 +33,8 @@ Status: **Fixed** (in this change), **Open** (needs a decision or access outside
 
 ### P1: loses a meaningful share
 
+- **Posting limits surfaced only at the last step.** The database allows 10 new ads per 24 hours (everyone) and 10 live ads (private sellers), but a seller found out only when Publish failed, after six steps. **Fixed:** the wizard checks both rules when it opens and on the review step, says exactly when they can publish again (or links to My ads to mark one sold), and keeps the draft.
+
 4. **Chat needs an account.** Unavoidable (messages need an identity), so the wall was made cheap: Call and WhatsApp work signed out; the sign-in screen says why ("Sign in to message the seller. Your number stays private."); and after signing in the message sheet reopens on the same ad with the text ready. Measured: the whole chat journey, sign-in included, is 13 s scripted. **Fixed.** Worth adding later: Sign in with Apple/Google to remove password typing.
 5. **Truncated primary CTA.** "WhatsApp" rendered as "WhatsA…" on the ad page's sticky bar and on result cards at 375–390 px wide, the most common Sri Lankan Android widths. **Fixed** with weighted button widths.
 6. **Mistyped prices were rewarded.** Entering Rs 5,450,000 for a car whose similar ads sit at a Rs 9.38M median earned a green "Good price" tag. A missing digit becomes a too-good-to-be-true ad buyers distrust. **Fixed:** the price step warns at 30% below or 50% above similar ads and offers "Use the median".
@@ -46,6 +48,19 @@ Status: **Fixed** (in this change), **Open** (needs a decision or access outside
 11. **Duplicate-save noise.** Syncing saved ads after sign-in produced HTTP 409s. **Fixed** with idempotent upserts.
 12. **Accessibility** (axe, light + dark, 375 + 430 px): tab bar roles, labels that didn't contain their visible text, switches nested inside tappable rows, an unlabelled stepper, one low-contrast caption, and 36 px heart buttons. **Fixed;** the only remaining items are a deliberate concise label on result cards and web-only header/back button sizes that don't exist on native.
 13. **Wide screens.** On tablets, lists and Home stretched edge to edge and "Three-wheelers" truncated on its tile. **Fixed** with max content widths and auto-sized tiles.
+
+### Found in code review (all fixed)
+
+- A draft started while signed out could be deleted when the same person later opened Sell signed in; it's now picked up and moved to their account.
+- A brand-new vehicle could publish mileage typed before the condition was changed.
+- A heart tap or ad view in the first moments after launch could be lost while saved data was still loading.
+- A retry on a failed photo upload stopped working after leaving the photos step and coming back.
+- A previous account's staff flag could briefly apply to the next account on the same phone.
+- A failed message load showed an empty chat and marked it read; it now shows an error.
+- Saving contact details could fail silently after publishing or saving the profile.
+- A re-render during a number reveal could cancel it and send a second reveal, using up the rate limit.
+- Catching up on missed messages before the first load could put old messages at the bottom of the chat.
+- Saving an edit stacked a second copy of the ad page; it now returns to where the edit started.
 
 ### Decisions for the business
 

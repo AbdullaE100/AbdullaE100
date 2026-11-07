@@ -162,7 +162,8 @@ export function toListingRow(d: Draft) {
     condition: d.condition!,
     year_manufactured: Number(d.year_manufactured),
     year_registered: d.year_registered ? Number(d.year_registered) : null,
-    mileage_km: d.condition === "brand_new" ? (num(d.mileage_km) ?? 0) : num(d.mileage_km),
+    // The field is hidden for brand new vehicles, so ignore anything typed before switching.
+    mileage_km: d.condition === "brand_new" ? 0 : num(d.mileage_km),
     engine_cc: num(d.engine_cc),
     fuel: d.fuel,
     transmission: d.transmission,

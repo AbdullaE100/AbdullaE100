@@ -53,7 +53,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [auth, setAuth] = useState<AuthSession | null>(null);
   const [ready, setReady] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [isStaff, setIsStaff] = useState(false);
+  const [staffFor, setStaffFor] = useState<string | null>(null);
   const userId = auth?.user.id ?? null;
 
   useEffect(() => {
@@ -72,7 +72,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (!userId) return;
     const r = await loadProfile(userId);
     setProfile(r.profile);
-    setIsStaff(r.staff);
+    setStaffFor(r.staff ? userId : null);
   }, [userId]);
 
   useEffect(() => {
@@ -84,7 +84,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     loadProfile(userId).then((r) => {
       if (!alive) return;
       setProfile(r.profile);
-      setIsStaff(r.staff);
+      setStaffFor(r.staff ? userId : null);
     });
     return () => {
       alive = false;
@@ -96,8 +96,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<Ctx>(
-    () => ({ ready, userId, email: auth?.user.email ?? null, profile: userId && profile?.id === userId ? profile : null, isStaff: !!userId && isStaff, refreshProfile, signOut }),
-    [ready, userId, auth?.user.email, profile, isStaff, refreshProfile, signOut],
+    () => ({
+      ready,
+      userId,
+      email: auth?.user.email ?? null,
+      profile: userId && profile?.id === userId ? profile : null,
+      isStaff: !!userId && staffFor === userId,
+      refreshProfile,
+      signOut,
+    }),
+    [ready, userId, auth?.user.email, profile, staffFor, refreshProfile, signOut],
   );
   return <SessionContext value={value}>{children}</SessionContext>;
 }

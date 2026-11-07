@@ -8,8 +8,11 @@ import { useSyncExternalStore } from "react";
 export function persisted<T>(key: string, initial: T, validate: (v: unknown) => T = (v) => v as T) {
   let value = initial;
   let loaded = false;
+  // Updates made before the stored value has loaded, replayed on top of it.
+  const early: ((prev: T) => T)[] = [];
   const listeners = new Set<() => void>();
   const emit = () => listeners.forEach((l) => l());
+  const save = () => AsyncStorage.setItem(key, JSON.stringify(value)).catch(() => {});
 
   const ready = AsyncStorage.getItem(key)
     .then((raw) => {
@@ -18,6 +21,11 @@ export function persisted<T>(key: string, initial: T, validate: (v: unknown) => 
     .catch(() => {})
     .finally(() => {
       loaded = true;
+      if (early.length) {
+        value = early.reduce((v, fn) => fn(v), value);
+        early.length = 0;
+        save();
+      }
       emit();
     });
 
@@ -26,9 +34,11 @@ export function persisted<T>(key: string, initial: T, validate: (v: unknown) => 
     get: () => value,
     isLoaded: () => loaded,
     set(next: T | ((prev: T) => T)) {
-      value = typeof next === "function" ? (next as (p: T) => T)(value) : next;
+      const fn = typeof next === "function" ? (next as (p: T) => T) : () => next;
+      value = fn(value);
       emit();
-      AsyncStorage.setItem(key, JSON.stringify(value)).catch(() => {});
+      if (loaded) save();
+      else early.push(fn);
     },
     subscribe(l: () => void) {
       listeners.add(l);
